@@ -1,0 +1,31 @@
+package com.example.wallet.data.mock
+
+import com.example.wallet.model.CardModel
+import com.example.wallet.model.PurchaseModel
+import com.example.wallet.model.UserModel
+
+/**
+ * Mocks simples utilizados pelas implementações fake dos repositories.
+ * Substituir por dados reais (Retrofit/Room/DataStore) futuramente.
+ */
+object MockData {
+
+    val user: UserModel = UserModel(
+        id = "u-1",
+        name = "Maria Silva",
+        email = "maria.silva@email.com"
+    )
+
+    /** Lista mutável — começa vazia; o usuário cria cartões pelo fluxo. */
+    val cards: MutableList<CardModel> = mutableListOf()
+
+    val purchases: List<PurchaseModel> = listOf(
+        PurchaseModel(id = "p-1", title = "Supermercado",   amount = 245.90, date = "12/05/2026"),
+        PurchaseModel(id = "p-2", title = "Streaming",      amount =  39.90, date = "10/05/2026"),
+        PurchaseModel(id = "p-3", title = "Restaurante",    amount = 128.50, date = "08/05/2026"),
+        PurchaseModel(id = "p-4", title = "Combustível",    amount = 200.00, date = "05/05/2026"),
+        PurchaseModel(id = "p-5", title = "Farmácia",       amount =  76.20, date = "03/05/2026")
+    )
+
+    const val BALANCE: Double = 12_345.67
+}
