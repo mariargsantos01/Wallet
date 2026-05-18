@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
@@ -47,7 +48,12 @@ import androidx.compose.ui.Alignment
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.font.FontWeight
+import com.example.wallet.model.PurchaseModel
 
 @Composable
 fun MyCardsScreen(
@@ -61,6 +67,15 @@ fun MyCardsScreen(
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { state.data?.size ?: 0 })
 
+    val mockPurchases = remember {
+        listOf(
+            PurchaseModel("1", "Alimentação", 45.90, "Hoje, 12:30"),
+            PurchaseModel("2", "Cinema", 32.00, "Ontem, 18:00"),
+            PurchaseModel("3", "Farmácia", 15.50, "10 Out, 10:15"),
+            PurchaseModel("4", "Supermercado", 120.00, "08 Out, 14:20")
+        )
+        }
+
     Scaffold(
         topBar = {
             TopBar(
@@ -69,7 +84,9 @@ fun MyCardsScreen(
                         onClick = { /* Sua ação de favoritar */ },
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.padding(end = 16.dp).size(40.dp)
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(40.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
@@ -81,11 +98,6 @@ fun MyCardsScreen(
                         }
                     }
                 })
-        },
-        bottomBar = {
-            BottomNavigationBar(
-                currentRoute = currentRoute, onNavigate = onNavigate
-            )
         },
     ) { padding ->
         Box(
@@ -107,6 +119,7 @@ fun MyCardsScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Top
@@ -200,6 +213,53 @@ fun MyCardsScreen(
                                     )
                                 }
                             }
+                            // --- NOVA SEÇÃO: ÚLTIMAS COMPRAS ---
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            Text(
+                                text = "Últimas Compras",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .align(Alignment.Start)
+                                    .padding(bottom = 16.dp)
+                            )
+
+                            mockPurchases.forEach { purchase ->
+                                Column {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 12.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = purchase.title,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            Text(
+                                                text = purchase.date,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.outline
+                                            )
+                                        }
+                                        Text(
+                                            text = "R$ ${"%.2f".format(purchase.amount)}",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    HorizontalDivider(
+                                        thickness = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                }
+                            }
+
                         }
                     }
                 }
