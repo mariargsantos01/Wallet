@@ -1,15 +1,12 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "com.example.wallet"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.wallet"
@@ -52,6 +49,13 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Retrofit & Networking
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
+    implementation(libs.okhttp.logging)
+    implementation(libs.kotlinx.serialization.json)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

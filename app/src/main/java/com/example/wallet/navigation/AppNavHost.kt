@@ -9,12 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.wallet.ui.screens.CardDetailsScreen
-import com.example.wallet.ui.screens.CreateCardScreen
-import com.example.wallet.ui.screens.LoginScreen
-import com.example.wallet.ui.screens.MyCardsScreen
-import com.example.wallet.ui.screens.PurchasesScreen
-import com.example.wallet.ui.screens.SettingsScreen
+import com.example.wallet.ui.screens.*
 
 @Composable
 fun AppNavHost(
@@ -44,13 +39,52 @@ fun AppNavHost(
                     navController.navigate(target) {
                         popUpTo(Routes.Login.route) { inclusive = true }
                     }
+                },
+                onNavigateToSignUp = {
+                    navController.navigate(Routes.SignUp.route)
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate(Routes.ForgotPassword.route)
+                }
+            )
+        }
+
+        // ── Cadastro ───────────────────────────────────────────
+        composable(Routes.SignUp.route) {
+            SignUpScreen(
+                onBackToLogin = { navController.popBackStack() },
+                onSignUpSuccess = {
+                    navController.navigate(Routes.Login.route) {
+                        popUpTo(Routes.SignUp.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // ── Esqueceu Senha (Solicitação) ────────────────────────
+        composable(Routes.ForgotPassword.route) {
+            ForgotPasswordScreen(
+                onBackToLogin = { navController.popBackStack() },
+                onNavigateToReset = {
+                    navController.navigate(Routes.ResetPassword.route)
+                }
+            )
+        }
+
+        // ── Redefinir Senha (Token + Nova Senha) ───────────────
+        composable(Routes.ResetPassword.route) {
+            ResetPasswordScreen(
+                onResetSuccess = {
+                    navController.navigate(Routes.Login.route) {
+                        popUpTo(Routes.ForgotPassword.route) { inclusive = true }
+                        popUpTo(Routes.ResetPassword.route) { inclusive = true }
+                    }
                 }
             )
         }
 
         // ── Criar Cartão ──────────────────────────────────────
         composable(Routes.CreateCard.route) {
-            // Verifica se veio do MyCards (back stack contém MyCards)
             val fromMyCards = navController.previousBackStackEntry
                 ?.destination?.route == Routes.MyCards.route
 
@@ -60,7 +94,6 @@ fun AppNavHost(
                 onCardCreated = {
                     navController.navigate(Routes.MyCards.route) {
                         popUpTo(Routes.CreateCard.route) { inclusive = true }
-                        // Se veio de MyCards, limpar para não duplicar
                         popUpTo(Routes.MyCards.route) { inclusive = true }
                         launchSingleTop = true
                     }
@@ -68,7 +101,7 @@ fun AppNavHost(
             )
         }
 
-        // ── Meus Cartões (Gerenciar) ─────────────────────────
+        // ── Meus Cartões ─────────────────────────────────────
         composable(Routes.MyCards.route) {
             MyCardsScreen(
                 currentRoute = currentRoute,
@@ -115,4 +148,3 @@ fun AppNavHost(
         }
     }
 }
-

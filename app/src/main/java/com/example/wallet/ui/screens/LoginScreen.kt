@@ -1,6 +1,7 @@
 package com.example.wallet.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,17 +13,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,19 +37,30 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wallet.ui.theme.AzulPrimario
 import com.example.wallet.ui.theme.Branco
 import com.example.wallet.ui.theme.CinzaEscuro
 import com.example.wallet.ui.theme.CinzaTexto
 import com.example.wallet.ui.theme.FundoPrincipal
+import com.example.wallet.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (hasCards: Boolean) -> Unit
+    onLoginSuccess: (hasCards: Boolean) -> Unit,
+    onNavigateToSignUp: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
+    viewModel: LoginViewModel = viewModel()
 ) {
+    val username by viewModel.username.collectAsStateWithLifecycle()
+    val password by viewModel.password.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var passwordVisible by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -87,22 +105,23 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Campo Email
+        // Campo Usuário
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "Email",
+                text = "Usuário",
                 color = Branco,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             TextField(
-                value = "",
-                onValueChange = {},
-                placeholder = { Text("seu@email.com", color = CinzaTexto) },
+                value = username,
+                onValueChange = viewModel::onUsernameChange,
+                placeholder = { Text("seu.usuario", color = CinzaTexto) },
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
                 shape = RoundedCornerShape(8.dp),
                 leadingIcon = {
-                    Icon(Icons.Default.Email, contentDescription = null, tint = CinzaTexto)
+                    Icon(Icons.Default.Person, contentDescription = null, tint = CinzaTexto)
                 },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = CinzaEscuro,
@@ -110,7 +129,8 @@ fun LoginScreen(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedTextColor = Branco,
-                    unfocusedTextColor = Branco
+                    unfocusedTextColor = Branco,
+                    cursorColor = AzulPrimario
                 )
             )
         }
@@ -126,16 +146,23 @@ fun LoginScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             TextField(
-                value = "********",
-                onValueChange = {},
+                value = password,
+                onValueChange = viewModel::onPasswordChange,
                 modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
                 shape = RoundedCornerShape(8.dp),
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null, tint = CinzaTexto)
                 },
                 trailingIcon = {
-                    Icon(Icons.Default.Visibility, contentDescription = null, tint = CinzaTexto)
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Esconder senha" else "Mostrar senha",
+                            tint = CinzaTexto
+                        )
+                    }
                 },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = CinzaEscuro,
@@ -143,7 +170,8 @@ fun LoginScreen(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedTextColor = Branco,
-                    unfocusedTextColor = Branco
+                    unfocusedTextColor = Branco,
+                    cursorColor = AzulPrimario
                 )
             )
         }
@@ -152,19 +180,28 @@ fun LoginScreen(
 
         // Botão Entrar
         Button(
-            onClick = { /* Ação futura */ },
+            onClick = { viewModel.login(onLoginSuccess) },
+            enabled = !state.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = AzulPrimario)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AzulPrimario,
+                disabledContainerColor = AzulPrimario.copy(alpha = 0.5f)
+            )
         ) {
             Text(
-                text = "Entrar",
+                text = if (state.isLoading) "Entrando..." else "Entrar",
                 color = Branco,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
+        }
+
+        state.error?.let {
+            Spacer(Modifier.height(12.dp))
+            Text(it, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -173,7 +210,8 @@ fun LoginScreen(
         Text(
             text = "Esqueci minha senha",
             color = CinzaTexto,
-            fontSize = 14.sp
+            fontSize = 14.sp,
+            modifier = Modifier.clickable { onNavigateToForgotPassword() }
         )
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -185,6 +223,11 @@ fun LoginScreen(
                 append("Cadastre-se")
             }
         }
-        Text(text = signUpText, fontSize = 14.sp, color = CinzaTexto)
+        Text(
+            text = signUpText,
+            fontSize = 14.sp,
+            color = CinzaTexto,
+            modifier = Modifier.clickable { onNavigateToSignUp() }
+        )
     }
 }
