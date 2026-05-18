@@ -2,58 +2,51 @@ package com.example.wallet.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wallet.ui.components.BottomNavigationBar
-import com.example.wallet.ui.components.CardItem
-import com.example.wallet.ui.components.EmptyView
-import com.example.wallet.ui.components.ErrorView
-import com.example.wallet.ui.components.LoadingView
-import com.example.wallet.ui.components.TopBar
-import com.example.wallet.viewmodel.MyCardsViewModel
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import kotlinx.coroutines.launch
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wallet.model.PurchaseModel
+import com.example.wallet.ui.components.CardItem
+import com.example.wallet.ui.components.EmptyView
+import com.example.wallet.ui.components.ErrorView
+import com.example.wallet.ui.components.LoadingView
+import com.example.wallet.ui.components.PrimaryButton
+import com.example.wallet.ui.components.SecondaryButton
+import com.example.wallet.ui.components.TopBar
+import com.example.wallet.viewmodel.MyCardsViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun MyCardsScreen(
@@ -74,15 +67,16 @@ fun MyCardsScreen(
             PurchaseModel("3", "Farmácia", 15.50, "10 Out, 10:15"),
             PurchaseModel("4", "Supermercado", 120.00, "08 Out, 14:20")
         )
-        }
+    }
 
     Scaffold(
         topBar = {
             TopBar(
-                title = "Meus Cartões", actions = {
+                title = "Meus Cartões",
+                actions = {
                     Surface(
-                        onClick = { /* Sua ação de favoritar */ },
-                        shape = RoundedCornerShape(12.dp),
+                        onClick = { /* favoritar */ },
+                        shape = MaterialTheme.shapes.large,
                         color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier
                             .padding(end = 16.dp)
@@ -97,8 +91,10 @@ fun MyCardsScreen(
                             )
                         }
                     }
-                })
+                }
+            )
         },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
             modifier = Modifier
@@ -108,9 +104,9 @@ fun MyCardsScreen(
             when {
                 state.isLoading -> LoadingView()
                 state.error != null -> ErrorView(
-                    message = state.error!!, onRetry = viewModel::load
+                    message = state.error!!,
+                    onRetry = viewModel::load
                 )
-
                 state.data != null -> {
                     val cards = state.data!!
                     if (cards.isEmpty()) {
@@ -121,22 +117,19 @@ fun MyCardsScreen(
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
                                 .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Top
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-
                             Text(
-                                text = "${cards.size} cartão(ões)",
-                                style = MaterialTheme.typography.titleMedium,
+                                text = "${cards.size} cartão(ões) cadastrados",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier
                                     .align(Alignment.Start)
                                     .padding(bottom = 16.dp)
                             )
 
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 IconButton(
@@ -144,14 +137,15 @@ fun MyCardsScreen(
                                         scope.launch {
                                             pagerState.animateScrollToPage(pagerState.currentPage - 1)
                                         }
-                                    }, enabled = pagerState.currentPage > 0
+                                    },
+                                    enabled = pagerState.currentPage > 0
                                 ) {
                                     Icon(
-                                        Icons.Default.KeyboardArrowLeft,
-                                        contentDescription = "Anterior"
+                                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                        contentDescription = "Anterior",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-
                                 HorizontalPager(
                                     state = pagerState,
                                     modifier = Modifier.weight(1f),
@@ -159,107 +153,102 @@ fun MyCardsScreen(
                                 ) { page ->
                                     CardItem(
                                         card = cards[page],
-                                        onClick = { onCardClick(cards[page].id) })
+                                        onClick = { onCardClick(cards[page].id) }
+                                    )
                                 }
-
                                 IconButton(
                                     onClick = {
                                         scope.launch {
                                             pagerState.animateScrollToPage(pagerState.currentPage + 1)
                                         }
-                                    }, enabled = pagerState.currentPage < cards.size - 1
+                                    },
+                                    enabled = pagerState.currentPage < cards.size - 1
                                 ) {
                                     Icon(
-                                        Icons.Default.KeyboardArrowRight,
-                                        contentDescription = "Próximo"
+                                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = "Próximo",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
 
                             Text(
                                 text = "${pagerState.currentPage + 1} de ${cards.size}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(top = 16.dp)
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 12.dp)
                             )
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(Modifier.height(20.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                OutlinedButton(
-                                    onClick = { /* Ação de gerenciar */ },
+                                SecondaryButton(
+                                    text = "Gerenciar",
+                                    onClick = { /* gerenciar */ },
                                     modifier = Modifier.weight(1f)
+                                )
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = "GERENCIAR", fontSize = 12.sp, maxLines = 1
-                                    )
-                                }
-
-
-                                Button(
-                                    onClick = onCreateCard, modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Add,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(Modifier.width(4.dp))
-                                    Text(
-                                        text = "NOVO CARTÃO", fontSize = 12.sp, maxLines = 1
+                                    PrimaryButton(
+                                        text = "+ Novo Cartão",
+                                        onClick = onCreateCard
                                     )
                                 }
                             }
-                            // --- NOVA SEÇÃO: ÚLTIMAS COMPRAS ---
-                            Spacer(modifier = Modifier.height(32.dp))
+
+                            Spacer(Modifier.height(28.dp))
 
                             Text(
-                                text = "Últimas Compras",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
+                                text = "ÚLTIMAS COMPRAS",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier
                                     .align(Alignment.Start)
-                                    .padding(bottom = 16.dp)
+                                    .padding(bottom = 8.dp)
                             )
 
                             mockPurchases.forEach { purchase ->
-                                Column {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 12.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column {
-                                            Text(
-                                                text = purchase.title,
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                            Text(
-                                                text = purchase.date,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.outline
-                                            )
-                                        }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
                                         Text(
-                                            text = "R$ ${"%.2f".format(purchase.amount)}",
+                                            text = purchase.title,
                                             style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Text(
+                                            text = purchase.date,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
-                                    HorizontalDivider(
-                                        thickness = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant
+                                    Text(
+                                        text = "-R$ ${"%.2f".format(purchase.amount)}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
+                                HorizontalDivider(
+                                    thickness = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
                             }
 
+                            Spacer(Modifier.height(16.dp))
                         }
                     }
                 }
@@ -267,3 +256,4 @@ fun MyCardsScreen(
         }
     }
 }
+

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Logo do app (Wallet): cartão de crédito estilizado em branco.
+  Usado pela SplashScreen API e como ícone do launcher.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Sombra/base (translúcida) atrás do cartão -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="M22,40 L82,40 A6,6 0 0 1 88,46 L88,76 A6,6 0 0 1 82,82 L22,82 A6,6 0 0 1 16,76 L16,46 A6,6 0 0 1 22,40 Z" />
+
+    <!-- Corpo principal do cartão (branco) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M20,34 L82,34 A6,6 0 0 1 88,40 L88,72 A6,6 0 0 1 82,78 L20,78 A6,6 0 0 1 14,72 L14,40 A6,6 0 0 1 20,34 Z" />
+
+    <!-- Faixa magnética (escura) -->
+    <path
+        android:fillColor="#FF0A1628"
+        android:pathData="M14,44 L88,44 L88,52 L14,52 Z" />
+
+    <!-- Chip dourado -->
+    <path
+        android:fillColor="#FFF59E0B"
+        android:pathData="M22,58 L34,58 A2,2 0 0 1 36,60 L36,68 A2,2 0 0 1 34,70 L22,70 A2,2 0 0 1 20,68 L20,60 A2,2 0 0 1 22,58 Z" />
+
+    <!-- Linhas do chip -->
+    <path
+        android:fillColor="#FF0A1628"
+        android:pathData="M20,63 L36,63 L36,64 L20,64 Z" />
+    <path
+        android:fillColor="#FF0A1628"
+        android:pathData="M28,58 L29,58 L29,70 L28,70 Z" />
+
+    <!-- Linha "número do cartão" -->
+    <path
+        android:fillColor="#FF8BA3C0"
+        android:pathData="M44,62 L80,62 L80,64 L44,64 Z" />
+    <path
+        android:fillColor="#FF00BCD4"
+        android:pathData="M44,68 L66,68 L66,70 L44,70 Z" />
+</vector>
+

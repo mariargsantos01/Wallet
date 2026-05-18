@@ -2,25 +2,32 @@ package com.example.wallet.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wallet.ui.theme.*
+import com.example.wallet.ui.components.AppTextField
+import com.example.wallet.ui.components.PasswordTextField
+import com.example.wallet.ui.components.PrimaryButton
 import com.example.wallet.viewmodel.SignUpViewModel
 
 @Composable
@@ -38,142 +45,91 @@ fun SignUpScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(FundoPrincipal)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(60.dp))
+        Spacer(Modifier.height(60.dp))
 
-        // Títulos
         Text(
             text = "Criar Conta",
             style = MaterialTheme.typography.headlineMedium,
-            color = Branco,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold
         )
-
+        Spacer(Modifier.height(8.dp))
         Text(
             text = "Preencha os dados abaixo",
             style = MaterialTheme.typography.bodyMedium,
-            color = CinzaTexto
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(Modifier.height(32.dp))
 
-        // Nome Completo
-        SignUpTextField(
-            label = "Nome Completo", 
-            value = fullName, 
-            onValueChange = viewModel::onFullNameChange, 
+        AppTextField(
+            value = fullName,
+            onValueChange = viewModel::onFullNameChange,
+            label = "Nome Completo",
             placeholder = "Seu nome",
             leadingIcon = Icons.Default.Person
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
-        // Username
-        SignUpTextField(
-            label = "Usuário", 
-            value = username, 
-            onValueChange = viewModel::onUsernameChange, 
+        AppTextField(
+            value = username,
+            onValueChange = viewModel::onUsernameChange,
+            label = "Usuário",
             placeholder = "seu.usuario",
             leadingIcon = Icons.Default.AccountCircle
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
-        // Email
-        SignUpTextField(
-            label = "Email", 
-            value = email, 
-            onValueChange = viewModel::onEmailChange, 
+        AppTextField(
+            value = email,
+            onValueChange = viewModel::onEmailChange,
+            label = "Email",
             placeholder = "seu@email.com",
-            leadingIcon = Icons.Default.Email
+            leadingIcon = Icons.Default.Email,
+            keyboardType = KeyboardType.Email
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
-        // Senha
-        SignUpTextField(
-            label = "Senha",
+        PasswordTextField(
             value = password,
             onValueChange = viewModel::onPasswordChange,
+            label = "Senha",
             placeholder = "********",
-            isPassword = true,
             leadingIcon = Icons.Default.Lock
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(Modifier.height(28.dp))
 
-        // Botão Cadastrar
-        Button(
+        PrimaryButton(
+            text = if (state.isLoading) "Cadastrando..." else "Cadastrar",
             onClick = { viewModel.signUp(onSignUpSuccess) },
-            enabled = !state.isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AzulPrimario,
-                disabledContainerColor = AzulPrimario.copy(alpha = 0.5f)
-            )
-        ) {
-            Text(
-                text = if (state.isLoading) "Cadastrando..." else "Cadastrar",
-                color = Branco, 
-                fontSize = 16.sp, 
-                fontWeight = FontWeight.Bold
-            )
-        }
+            loading = state.isLoading
+        )
 
         state.error?.let {
             Spacer(Modifier.height(12.dp))
-            Text(it, color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(Modifier.height(24.dp))
 
         Text(
             text = "Já tem uma conta? Entre aqui",
-            color = AzulPrimario,
-            modifier = Modifier.clickable { onBackToLogin() },
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable { onBackToLogin() }
         )
-        
-        Spacer(modifier = Modifier.height(40.dp))
+
+        Spacer(Modifier.height(40.dp))
     }
 }
 
-@Composable
-fun SignUpTextField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
-    isPassword: Boolean = false
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = label, color = Branco, fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
-        TextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = { Text(placeholder, color = CinzaTexto) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            shape = RoundedCornerShape(8.dp),
-            leadingIcon = {
-                Icon(leadingIcon, contentDescription = null, tint = CinzaTexto)
-            },
-            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = CinzaEscuro,
-                unfocusedContainerColor = CinzaEscuro,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = Branco,
-                unfocusedTextColor = Branco,
-                cursorColor = AzulPrimario
-            )
-        )
-    }
-}

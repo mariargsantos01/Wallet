@@ -7,4 +7,9 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Design System (sincronizado com Color.kt) -->
+    <color name="wallet_background">#FF0A1628</color>
+    <color name="wallet_primary">#FF00BCD4</color>
+    <color name="wallet_foreground">#FFFFFFFF</color>
 </resources>

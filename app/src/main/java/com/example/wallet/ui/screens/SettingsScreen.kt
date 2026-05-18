@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,27 +32,41 @@ fun SettingsScreen(
 ) {
     Scaffold(
         topBar = { TopBar(title = "Ajustes") },
-        bottomBar = { BottomNavigationBar(currentRoute = currentRoute, onNavigate = onNavigate) }
+        bottomBar = { BottomNavigationBar(currentRoute = currentRoute, onNavigate = onNavigate) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             Column {
+                val itemColors = ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    headlineColor = MaterialTheme.colorScheme.onBackground,
+                    supportingColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    leadingIconColor = MaterialTheme.colorScheme.primary
+                )
                 ListItem(
                     headlineContent = { Text("Tema") },
                     supportingContent = { Text("Claro / Escuro") },
-                    leadingContent = { Icon(Icons.Default.Palette, contentDescription = null) }
+                    leadingContent = { Icon(Icons.Default.Palette, contentDescription = null) },
+                    colors = itemColors
                 )
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 ListItem(
                     headlineContent = { Text("Segurança") },
                     supportingContent = { Text("Senha, biometria") },
-                    leadingContent = { Icon(Icons.Default.Lock, contentDescription = null) }
+                    leadingContent = { Icon(Icons.Default.Lock, contentDescription = null) },
+                    colors = itemColors
                 )
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 ListItem(
                     headlineContent = { Text("Sair") },
                     leadingContent = {
                         Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                     },
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        headlineColor = MaterialTheme.colorScheme.error,
+                        leadingIconColor = MaterialTheme.colorScheme.error
+                    ),
                     modifier = Modifier.clickable { viewModel.logout(onLogout) }
                 )
             }
