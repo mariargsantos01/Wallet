@@ -14,6 +14,7 @@ object NetworkModule {
     private val json = Json {
         ignoreUnknownKeys = true
         coerceInputValues = true
+        encodeDefaults = true // Garante que campos com valor default sejam enviados no JSON
     }
 
     private val okHttpClient = OkHttpClient.Builder()
