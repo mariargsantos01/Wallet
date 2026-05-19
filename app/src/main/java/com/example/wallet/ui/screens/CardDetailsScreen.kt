@@ -5,23 +5,24 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.wallet.ui.components.AppCard
+import com.example.wallet.ui.components.DestructiveButton
 import com.example.wallet.ui.components.ErrorView
 import com.example.wallet.ui.components.LoadingView
+import com.example.wallet.ui.components.SecondaryButton
 import com.example.wallet.ui.components.TopBar
 import com.example.wallet.utils.Formatters
 import com.example.wallet.viewmodel.CardDetailsViewModel
@@ -37,38 +38,63 @@ fun CardDetailsScreen(
     LaunchedEffect(cardId) { viewModel.loadCard(cardId) }
 
     Scaffold(
-        topBar = { TopBar(title = "Detalhes do Cartão", onBack = onBack) }
+        topBar = { TopBar(title = "Detalhes do Cartão", onBack = onBack) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
             when {
                 state.isLoading -> LoadingView()
                 state.error != null -> ErrorView(message = state.error!!)
                 state.data != null -> {
                     val card = state.data!!
                     Column(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(card.name, style = MaterialTheme.typography.titleLarge)
+                        AppCard {
+                            Column {
+                                Text(
+                                    text = card.name,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                                 Spacer(Modifier.height(8.dp))
-                                Text("•••• •••• •••• ${card.lastDigits}")
-                                Spacer(Modifier.height(8.dp))
-                                Text("Limite: ${Formatters.currency(card.limit)}")
+                                Text(
+                                    text = "•••• •••• •••• ${card.lastDigits}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                Text(
+                                    text = "Limite: ${Formatters.currency(card.limit)}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                                 Spacer(Modifier.height(4.dp))
-                                Text("Fatura atual: ${Formatters.currency(card.limit * 0.35)}")
+                                Text(
+                                    text = "Fatura atual: ${Formatters.currency(card.limit * 0.35)}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
-                        OutlinedButton(
-                            onClick = { viewModel.blockCard() },
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text("Bloquear cartão") }
 
-                        OutlinedButton(
-                            onClick = { viewModel.changeLimit() },
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text("Alterar limite") }
+                        SecondaryButton(
+                            text = "Alterar limite",
+                            onClick = { viewModel.changeLimit() }
+                        )
+
+                        DestructiveButton(
+                            text = "Bloquear cartão",
+                            onClick = { viewModel.blockCard() }
+                        )
                     }
                 }
             }

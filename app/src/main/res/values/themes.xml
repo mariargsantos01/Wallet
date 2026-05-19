@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Tema base do app (após a splash). -->
     <style name="Theme.Wallet" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!--
+      Splash screen do app, usando a SplashScreen API (androidx.core:splashscreen).
+      Compatível com Android 6+ (backport) e nativo no Android 12+.
+    -->
+    <style name="Theme.Wallet.Splash" parent="Theme.SplashScreen">
+        <!-- Cor de fundo da splash -->
+        <item name="windowSplashScreenBackground">@color/wallet_background</item>
+        <!-- Ícone exibido no centro -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_wallet_logo</item>
+        <!-- Tempo (ms) que o ícone fica visível -->
+        <item name="windowSplashScreenAnimationDuration">600</item>
+        <!-- Tema aplicado após a splash terminar -->
+        <item name="postSplashScreenTheme">@style/Theme.Wallet</item>
+    </style>
 </resources>
+
