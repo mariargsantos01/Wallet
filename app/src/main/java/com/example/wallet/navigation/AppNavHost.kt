@@ -29,7 +29,7 @@ fun AppNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = Routes.MyCards.route
+        startDestination = Routes.Login.route
     ) {
         // ── Login ──────────────────────────────────────────────
         composable(Routes.Login.route) {
