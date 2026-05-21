@@ -35,8 +35,7 @@ fun AppNavHost(
         composable(Routes.Login.route) {
             LoginScreen(
                 onLoginSuccess = { hasCards ->
-                    val target = if (hasCards) Routes.MyCards.route else Routes.CreateCard.route
-                    navController.navigate(target) {
+                    navController.navigate(Routes.MyCards.route) {
                         popUpTo(Routes.Login.route) { inclusive = true }
                     }
                 },
