@@ -1,18 +1,7 @@
 package com.example.wallet.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -36,14 +25,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font. FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wallet.model.PurchaseModel
@@ -123,7 +110,6 @@ fun MyCardsScreen(
                 state.isLoading -> LoadingView()
                 state.error != null -> ErrorView(message = state.error!!, onRetry = viewModel::load)
                 cards.isEmpty() -> {
-                    // ESTADO VAZIO (Conforme a imagem)
                     Column(
                         modifier = Modifier.fillMaxSize().padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -163,9 +149,8 @@ fun MyCardsScreen(
                         )
                         Spacer(Modifier.height(48.dp))
 
-                        // Botão Central com Borda Pontilhada
                         Box(
-                            modifier = Modifier.fillMaxWidth().height(180.dp).clickable { onCreateCard() },
+                            modifier = Modifier.fillMaxWidth().height(180.dp).clickable { showBankModal = true },
                             contentAlignment = Alignment.Center
                         ) {
                             val stroke = Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
@@ -190,7 +175,6 @@ fun MyCardsScreen(
                     }
                 }
                 else -> {
-                    // LISTAGEM DE CARTÕES E COMPRAS
                     Column(
                         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -217,20 +201,6 @@ fun MyCardsScreen(
                                 onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } },
                                 enabled = pagerState.currentPage < cards.size - 1
                             ) {
-                                SecondaryButton(
-                                    text = "Gerenciar",
-                                    onClick = { /* gerenciar */ },
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Row(
-                                    modifier = Modifier.weight(1f),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    PrimaryButton(
-                                        text = "+ Novo Cartão",
-                                        onClick = { showBankModal = true }
-                                    )
-                                }
                                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                             }
                         }
@@ -240,14 +210,16 @@ fun MyCardsScreen(
                         Spacer(Modifier.height(24.dp))
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            OutlinedButton(onClick = { /* gerenciar */ }, modifier = Modifier.weight(1f)) {
-                                Text("GERENCIAR", fontSize = 12.sp)
-                            }
-                            Button(onClick = onCreateCard, modifier = Modifier.weight(1f)) {
-                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("NOVO CARTÃO", fontSize = 12.sp)
-                            }
+                            SecondaryButton(
+                                text = "Gerenciar",
+                                onClick = { /* gerenciar */ },
+                                modifier = Modifier.weight(1f)
+                            )
+                            PrimaryButton(
+                                text = "+ Novo Cartão",
+                                onClick = { showBankModal = true },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
 
                         Spacer(Modifier.height(32.dp))
@@ -273,5 +245,4 @@ fun MyCardsScreen(
             }
         }
     }
-}
 }
