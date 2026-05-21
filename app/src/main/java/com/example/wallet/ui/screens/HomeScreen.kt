@@ -13,18 +13,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -35,17 +32,19 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wallet.model.PurchaseModel
 import com.example.wallet.ui.components.CardItem
-import com.example.wallet.ui.components.EmptyView
 import com.example.wallet.ui.components.ErrorView
 import com.example.wallet.ui.components.LoadingView
-import com.example.wallet.ui.components.PrimaryButton
-import com.example.wallet.ui.components.SecondaryButton
 import com.example.wallet.ui.components.TopBar
 import com.example.wallet.ui.components.cardmanagement.CardManagementBottomSheet
 import com.example.wallet.ui.components.cardmanagement.DeleteCardConfirmationDialog
@@ -67,6 +66,8 @@ fun MyCardsScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val managementUiState by cardManagementViewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val cards = state.data ?: emptyList()
+    val pagerState = rememberPagerState(pageCount = { cards.size })
     val pagerState = rememberPagerState(pageCount = { state.data?.size ?: 0 })
     var cardWasDeleted by remember { mutableStateOf(false) }
 
