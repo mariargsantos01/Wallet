@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,8 +42,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wallet.model.PurchaseModel
 import com.example.wallet.ui.components.CardItem
+import com.example.wallet.ui.components.EmptyView
 import com.example.wallet.ui.components.ErrorView
 import com.example.wallet.ui.components.LoadingView
+import com.example.wallet.ui.components.PrimaryButton
+import com.example.wallet.ui.components.SecondaryButton
 import com.example.wallet.ui.components.TopBar
 import com.example.wallet.ui.components.cardmanagement.CardManagementBottomSheet
 import com.example.wallet.ui.components.cardmanagement.DeleteCardConfirmationDialog
@@ -68,7 +70,6 @@ fun MyCardsScreen(
     val scope = rememberCoroutineScope()
     val cards = state.data ?: emptyList()
     val pagerState = rememberPagerState(pageCount = { cards.size })
-    val pagerState = rememberPagerState(pageCount = { state.data?.size ?: 0 })
     var cardWasDeleted by remember { mutableStateOf(false) }
 
     // Observar eventos do ViewModel
