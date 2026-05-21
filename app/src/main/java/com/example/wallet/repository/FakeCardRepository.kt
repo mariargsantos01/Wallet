@@ -21,6 +21,11 @@ class FakeCardRepository : CardRepository {
         MockData.cards.add(card)
     }
 
+    override suspend fun deleteCard(id: String) {
+        delay(300)
+        MockData.cards.removeAll { it.id == id }
+    }
+
     override suspend fun hasCards(): Boolean {
         delay(100)
         return MockData.cards.isNotEmpty()
