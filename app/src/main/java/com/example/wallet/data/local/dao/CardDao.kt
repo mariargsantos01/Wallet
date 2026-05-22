@@ -12,22 +12,22 @@ import kotlinx.coroutines.flow.Flow
 interface CardDao {
 
     @Query("SELECT * FROM cards WHERE accountId = :accountId ORDER BY createdAt ASC")
-    fun observeByAccount(accountId: String): Flow<List<CardEntity>>
+    fun observeByAccount(accountId: Long): Flow<List<CardEntity>>
 
     @Query("SELECT * FROM cards WHERE accountId = :accountId ORDER BY createdAt ASC")
-    suspend fun getByAccount(accountId: String): List<CardEntity>
+    suspend fun getByAccount(accountId: Long): List<CardEntity>
 
     @Query("SELECT * FROM cards ORDER BY createdAt ASC")
     suspend fun getAll(): List<CardEntity>
 
     @Query("SELECT * FROM cards WHERE id = :id")
-    suspend fun getById(id: String): CardEntity?
+    suspend fun getById(id: Long): CardEntity?
 
     @Query("SELECT COUNT(*) FROM cards")
     suspend fun count(): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(card: CardEntity)
+    suspend fun insert(card: CardEntity): Long
 
     @Update
     suspend fun update(card: CardEntity)
@@ -43,7 +43,7 @@ interface CardDao {
         """
     )
     suspend fun updateManagement(
-        id: String,
+        id: Long,
         isFavorite: Boolean,
         isActive: Boolean,
         dayLimit: Double,
@@ -51,18 +51,17 @@ interface CardDao {
     )
 
     @Query("UPDATE cards SET isFavorite = :isFavorite WHERE id = :id")
-    suspend fun setFavorite(id: String, isFavorite: Boolean)
+    suspend fun setFavorite(id: Long, isFavorite: Boolean)
 
     @Query("UPDATE cards SET isActive = :isActive WHERE id = :id")
-    suspend fun setActive(id: String, isActive: Boolean)
+    suspend fun setActive(id: Long, isActive: Boolean)
 
     @Query("UPDATE cards SET dayLimit = :day, nightLimit = :night WHERE id = :id")
-    suspend fun updateLimits(id: String, day: Double, night: Double)
+    suspend fun updateLimits(id: Long, day: Double, night: Double)
 
     @Query("DELETE FROM cards WHERE id = :id")
-    suspend fun deleteById(id: String)
+    suspend fun deleteById(id: Long)
 
     @Query("DELETE FROM cards")
     suspend fun clear()
 }
-

@@ -21,11 +21,13 @@ class SessionManager(context: Context) {
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    private val _currentUserId = MutableStateFlow(prefs.getString(KEY_USER_ID, null))
-    val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
+    private val _currentUserId = MutableStateFlow(
+        prefs.getLong(KEY_USER_ID, -1L).takeIf { it != -1L }
+    )
+    val currentUserId: StateFlow<Long?> = _currentUserId.asStateFlow()
 
-    fun setCurrentUser(userId: String) {
-        prefs.edit().putString(KEY_USER_ID, userId).apply()
+    fun setCurrentUser(userId: Long) {
+        prefs.edit().putLong(KEY_USER_ID, userId).apply()
         _currentUserId.value = userId
     }
 
@@ -34,11 +36,10 @@ class SessionManager(context: Context) {
         _currentUserId.value = null
     }
 
-    fun getCurrentUserId(): String? = _currentUserId.value
+    fun getCurrentUserId(): Long? = _currentUserId.value
 
     companion object {
         private const val PREFS_NAME = "wallet_session"
         private const val KEY_USER_ID = "current_user_id"
     }
 }
-

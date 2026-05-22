@@ -15,6 +15,6 @@ sealed class Routes(val route: String) {
 
     data object CardDetails : Routes("card_details/{cardId}") {
         const val ARG_CARD_ID = "cardId"
-        fun build(cardId: String) = "card_details/$cardId"
+        fun build(cardId: Long) = "card_details/$cardId"
     }
 }

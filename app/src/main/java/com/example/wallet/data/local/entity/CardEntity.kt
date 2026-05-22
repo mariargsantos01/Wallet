@@ -26,8 +26,8 @@ import com.example.wallet.model.CardModel
     indices = [Index(value = ["accountId"])]
 )
 data class CardEntity(
-    @PrimaryKey val id: String,
-    val accountId: String,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    val accountId: Long,
     val name: String,
     val lastDigits: String,
     val limit: Double,
@@ -53,7 +53,7 @@ data class CardEntity(
     )
 
     companion object {
-        fun fromModel(model: CardModel, accountId: String): CardEntity = CardEntity(
+        fun fromModel(model: CardModel, accountId: Long): CardEntity = CardEntity(
             id = model.id,
             accountId = accountId,
             name = model.name,
@@ -68,4 +68,3 @@ data class CardEntity(
         )
     }
 }
-

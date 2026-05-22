@@ -19,7 +19,7 @@ class FakeUserRepository : UserRepository {
     }
 
     override suspend fun signUp(name: String, email: String, password: String): UserModel {
-        val u = UserModel(id = "u-1", name = name, email = email)
+        val u = UserModel(id = 1L, name = name, email = email)
         _current.value = u
         return u
     }

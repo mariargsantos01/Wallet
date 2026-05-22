@@ -11,13 +11,13 @@ import kotlinx.coroutines.flow.Flow
 interface PurchaseDao {
 
     @Query("SELECT * FROM purchases WHERE accountId = :accountId ORDER BY createdAt DESC")
-    fun observeByAccount(accountId: String): Flow<List<PurchaseEntity>>
+    fun observeByAccount(accountId: Long): Flow<List<PurchaseEntity>>
 
     @Query("SELECT * FROM purchases WHERE cardId = :cardId ORDER BY createdAt DESC")
-    fun observeByCard(cardId: String): Flow<List<PurchaseEntity>>
+    fun observeByCard(cardId: Long): Flow<List<PurchaseEntity>>
 
     @Query("SELECT * FROM purchases WHERE accountId = :accountId ORDER BY createdAt DESC")
-    suspend fun getByAccount(accountId: String): List<PurchaseEntity>
+    suspend fun getByAccount(accountId: Long): List<PurchaseEntity>
 
     @Query("SELECT * FROM purchases ORDER BY createdAt DESC")
     suspend fun getAll(): List<PurchaseEntity>
@@ -26,18 +26,17 @@ interface PurchaseDao {
     suspend fun count(): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(purchase: PurchaseEntity)
+    suspend fun insert(purchase: PurchaseEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(purchases: List<PurchaseEntity>)
 
     @Query("DELETE FROM purchases WHERE id = :id")
-    suspend fun deleteById(id: String)
+    suspend fun deleteById(id: Long)
 
     @Query("DELETE FROM purchases WHERE accountId = :accountId")
-    suspend fun clearByAccount(accountId: String)
+    suspend fun clearByAccount(accountId: Long)
 
     @Query("DELETE FROM purchases")
     suspend fun clear()
 }
-

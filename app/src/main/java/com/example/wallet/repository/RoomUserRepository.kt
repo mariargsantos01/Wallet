@@ -1,7 +1,11 @@
 package com.example.wallet.repository
 
 import com.example.wallet.data.local.dao.AccountDao
+import com.example.wallet.data.local.dao.CardDao
+import com.example.wallet.data.local.dao.PurchaseDao
 import com.example.wallet.data.local.entity.AccountEntity
+import com.example.wallet.data.local.entity.CardEntity
+import com.example.wallet.data.local.entity.PurchaseEntity
 import com.example.wallet.model.UserModel
 import com.example.wallet.utils.SessionManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -9,7 +13,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import java.util.UUID
 
 /**
  * Implementação real de [UserRepository] usando Room + [SessionManager].
@@ -25,7 +28,9 @@ import java.util.UUID
  */
 class RoomUserRepository(
     private val accountDao: AccountDao,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val cardDao: CardDao? = null,
+    private val purchaseDao: PurchaseDao? = null
 ) : UserRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,24 +43,41 @@ class RoomUserRepository(
     override suspend fun login(email: String, password: String): UserModel {
         val normalized = email.trim().lowercase()
         val existing = accountDao.getByEmail(normalized)
-        val account = existing ?: AccountEntity(
-            id = UUID.randomUUID().toString(),
-            name = normalized.substringBefore("@").replaceFirstChar { it.uppercase() },
-            email = normalized
-        ).also { accountDao.insert(it) }
+        val isNewAccount = existing == null
+        val account = if (existing != null) {
+            existing
+        } else {
+            val entity = AccountEntity(
+                name = normalized.substringBefore("@").replaceFirstChar { it.uppercase() },
+                email = normalized
+            )
+            val newId = accountDao.insert(entity)
+            entity.copy(id = newId)
+        }
 
         sessionManager.setCurrentUser(account.id)
+
+        // Seed de dados mockados para o usuário "teste123"
+        if (isNewAccount && normalized == "teste123") {
+            seedTestData(account.id)
+        }
+
         return account.toUserModel()
     }
 
     override suspend fun signUp(name: String, email: String, password: String): UserModel {
         val normalized = email.trim().lowercase()
         val existing = accountDao.getByEmail(normalized)
-        val account = existing ?: AccountEntity(
-            id = UUID.randomUUID().toString(),
-            name = name,
-            email = normalized
-        ).also { accountDao.insert(it) }
+        val account = if (existing != null) {
+            existing
+        } else {
+            val entity = AccountEntity(
+                name = name,
+                email = normalized
+            )
+            val newId = accountDao.insert(entity)
+            entity.copy(id = newId)
+        }
 
         sessionManager.setCurrentUser(account.id)
         return account.toUserModel()
@@ -82,5 +104,38 @@ class RoomUserRepository(
         name = name,
         email = email
     )
-}
 
+    private suspend fun seedTestData(accountId: Long) {
+        val cDao = cardDao ?: return
+        val pDao = purchaseDao ?: return
+
+        // Cria um cartão de teste
+        val cardId = cDao.insert(
+            CardEntity(
+                accountId = accountId,
+                name = "Wallet Black",
+                lastDigits = "7842",
+                limit = 10000.0,
+                isFavorite = true,
+                isActive = true,
+                dayLimit = 5000.0,
+                nightLimit = 2000.0,
+                brand = "Visa",
+                expiry = "06/29"
+            )
+        )
+
+        // Compras mockadas associadas ao cartão
+        val purchases = listOf(
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Supermercado Extra", amount = 287.45, date = "20/05/2026"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Netflix", amount = 55.90, date = "18/05/2026"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Posto Shell", amount = 220.00, date = "15/05/2026"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "iFood", amount = 67.80, date = "14/05/2026"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Amazon", amount = 349.90, date = "12/05/2026"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Farmácia Drogasil", amount = 98.50, date = "10/05/2026"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Uber", amount = 32.70, date = "08/05/2026"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Padaria Real", amount = 18.90, date = "07/05/2026")
+        )
+        pDao.insertAll(purchases)
+    }
+}

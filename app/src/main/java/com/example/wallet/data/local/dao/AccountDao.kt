@@ -15,10 +15,10 @@ interface AccountDao {
     fun observeCurrent(): Flow<AccountEntity?>
 
     @Query("SELECT * FROM accounts WHERE id = :id")
-    fun observeById(id: String): Flow<AccountEntity?>
+    fun observeById(id: Long): Flow<AccountEntity?>
 
     @Query("SELECT * FROM accounts WHERE id = :id")
-    suspend fun getById(id: String): AccountEntity?
+    suspend fun getById(id: Long): AccountEntity?
 
     @Query("SELECT * FROM accounts WHERE email = :email LIMIT 1")
     suspend fun getByEmail(email: String): AccountEntity?
@@ -27,15 +27,14 @@ interface AccountDao {
     suspend fun getCurrent(): AccountEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(account: AccountEntity)
+    suspend fun insert(account: AccountEntity): Long
 
     @Update
     suspend fun update(account: AccountEntity)
 
     @Query("DELETE FROM accounts WHERE id = :id")
-    suspend fun deleteById(id: String)
+    suspend fun deleteById(id: Long)
 
     @Query("DELETE FROM accounts")
     suspend fun clear()
 }
-

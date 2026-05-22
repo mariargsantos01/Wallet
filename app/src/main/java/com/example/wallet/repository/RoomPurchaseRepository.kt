@@ -28,7 +28,7 @@ class RoomPurchaseRepository(
             else purchaseDao.observeByAccount(accountId).map { list -> list.map { it.toModel() } }
         }
 
-    override fun observePurchasesByCard(cardId: String): Flow<List<PurchaseModel>> =
+    override fun observePurchasesByCard(cardId: Long): Flow<List<PurchaseModel>> =
         purchaseDao.observeByCard(cardId).map { list -> list.map { it.toModel() } }
 
     override suspend fun getPurchases(): List<PurchaseModel> {
@@ -36,7 +36,7 @@ class RoomPurchaseRepository(
         return purchaseDao.getByAccount(accountId).map { it.toModel() }
     }
 
-    override suspend fun addPurchase(purchase: PurchaseModel, cardId: String?) {
+    override suspend fun addPurchase(purchase: PurchaseModel, cardId: Long?) {
         val accountId = sessionManager.getCurrentUserId() ?: return
         purchaseDao.insert(
             PurchaseEntity(
@@ -50,7 +50,7 @@ class RoomPurchaseRepository(
         )
     }
 
-    override suspend fun deletePurchase(id: String) {
+    override suspend fun deletePurchase(id: Long) {
         purchaseDao.deleteById(id)
     }
 

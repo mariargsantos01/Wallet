@@ -22,15 +22,17 @@ class FakeCardRepository : CardRepository {
         return MockData.cards.toList()
     }
 
-    override suspend fun getCardById(id: String): CardModel? {
+    override suspend fun getCardById(id: Long): CardModel? {
         delay(200)
         return MockData.cards.firstOrNull { it.id == id }
     }
 
-    override suspend fun addCard(card: CardModel) {
+    override suspend fun addCard(card: CardModel): Long {
         delay(300)
-        MockData.cards.add(card)
+        val newCard = card.copy(id = (MockData.cards.maxOfOrNull { it.id } ?: 0L) + 1L)
+        MockData.cards.add(newCard)
         _cards.value = MockData.cards.toList()
+        return newCard.id
     }
 
     override suspend fun updateCard(card: CardModel) {
@@ -41,9 +43,7 @@ class FakeCardRepository : CardRepository {
         }
     }
 
-    // ...existing code...
-
-    override suspend fun setFavorite(id: String, isFavorite: Boolean) {
+    override suspend fun setFavorite(id: Long, isFavorite: Boolean) {
         val idx = MockData.cards.indexOfFirst { it.id == id }
         if (idx >= 0) {
             MockData.cards[idx] = MockData.cards[idx].copy(isFavorite = isFavorite)
@@ -51,7 +51,7 @@ class FakeCardRepository : CardRepository {
         }
     }
 
-    override suspend fun setActive(id: String, isActive: Boolean) {
+    override suspend fun setActive(id: Long, isActive: Boolean) {
         val idx = MockData.cards.indexOfFirst { it.id == id }
         if (idx >= 0) {
             MockData.cards[idx] = MockData.cards[idx].copy(isActive = isActive)
@@ -59,7 +59,7 @@ class FakeCardRepository : CardRepository {
         }
     }
 
-    override suspend fun updateLimits(id: String, dayLimit: Double, nightLimit: Double) {
+    override suspend fun updateLimits(id: Long, dayLimit: Double, nightLimit: Double) {
         val idx = MockData.cards.indexOfFirst { it.id == id }
         if (idx >= 0) {
             MockData.cards[idx] = MockData.cards[idx].copy(
@@ -70,7 +70,7 @@ class FakeCardRepository : CardRepository {
         }
     }
 
-    override suspend fun deleteCard(id: String) {
+    override suspend fun deleteCard(id: Long) {
         delay(300)
         MockData.cards.removeAll { it.id == id }
         _cards.value = MockData.cards.toList()

@@ -52,7 +52,7 @@ import com.example.wallet.model.CardModel
 fun MyCardsScreen(
     currentRoute: String?,
     onNavigate: (String) -> Unit,
-    onCardClick: (String) -> Unit,
+    onCardClick: (Long) -> Unit,
     onCreateCard: () -> Unit,
     viewModel: MyCardsViewModel = viewModel(),
     purchasesViewModel: PurchasesViewModel = viewModel(),
@@ -65,7 +65,7 @@ fun MyCardsScreen(
     var showBankModal by remember { mutableStateOf(false) }
     var showManagementSheet by remember { mutableStateOf(false) }
     var managementCard by remember { mutableStateOf<CardModel?>(null) }
-    var pendingSelectCardId by remember { mutableStateOf<String?>(null) }
+    var pendingSelectCardId by remember { mutableStateOf<Long?>(null) }
     val purchasesState by purchasesViewModel.uiState.collectAsStateWithLifecycle()
     val purchases = purchasesState.data ?: emptyList()
     val pagerState = rememberPagerState(pageCount = { cards.size })

@@ -11,10 +11,9 @@ import androidx.room.PrimaryKey
  */
 @Entity(tableName = "accounts")
 data class AccountEntity(
-    @PrimaryKey val id: String,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     val name: String,
     val email: String,
     val balance: Double = 0.0,
     val createdAt: Long = System.currentTimeMillis()
 )
-

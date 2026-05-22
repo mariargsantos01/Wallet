@@ -11,18 +11,17 @@ import kotlinx.coroutines.flow.Flow
 interface BankConnectionDao {
 
     @Query("SELECT bankName FROM bank_connections WHERE accountId = :accountId")
-    fun observeConnectedBankNames(accountId: String): Flow<List<String>>
+    fun observeConnectedBankNames(accountId: Long): Flow<List<String>>
 
     @Query("SELECT bankName FROM bank_connections WHERE accountId = :accountId")
-    suspend fun getConnectedBankNames(accountId: String): List<String>
+    suspend fun getConnectedBankNames(accountId: Long): List<String>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun connect(connection: BankConnectionEntity)
 
     @Query("DELETE FROM bank_connections WHERE accountId = :accountId AND bankName = :bankName")
-    suspend fun disconnect(accountId: String, bankName: String)
+    suspend fun disconnect(accountId: Long, bankName: String)
 
     @Query("DELETE FROM bank_connections WHERE accountId = :accountId")
-    suspend fun disconnectAll(accountId: String)
+    suspend fun disconnectAll(accountId: Long)
 }
-

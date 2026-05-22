@@ -1,7 +1,7 @@
 package com.example.wallet.model
 
 data class CardModel(
-    val id: String,
+    val id: Long = 0L,
     val name: String,
     val lastDigits: String,
     val limit: Double,
@@ -12,4 +12,3 @@ data class CardModel(
     val brand: String = "Visa",
     val expiry: String = "12/28"
 )
-

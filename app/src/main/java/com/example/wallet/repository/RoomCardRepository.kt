@@ -29,7 +29,7 @@ class RoomCardRepository(
             else cardDao.observeByAccount(accountId).map { list -> list.map { it.toModel() } }
         }
 
-    private fun requireAccountId(): String =
+    private fun requireAccountId(): Long =
         sessionManager.getCurrentUserId()
             ?: error("Nenhum usuário logado — não é possível operar sobre cartões.")
 
@@ -38,12 +38,12 @@ class RoomCardRepository(
         return cardDao.getByAccount(accountId).map { it.toModel() }
     }
 
-    override suspend fun getCardById(id: String): CardModel? =
+    override suspend fun getCardById(id: Long): CardModel? =
         cardDao.getById(id)?.toModel()
 
-    override suspend fun addCard(card: CardModel) {
+    override suspend fun addCard(card: CardModel): Long {
         val accountId = requireAccountId()
-        cardDao.insert(CardEntity.fromModel(card, accountId))
+        return cardDao.insert(CardEntity.fromModel(card, accountId))
     }
 
     override suspend fun updateCard(card: CardModel) {
@@ -51,19 +51,19 @@ class RoomCardRepository(
         cardDao.update(CardEntity.fromModel(card, existing.accountId))
     }
 
-    override suspend fun deleteCard(id: String) {
+    override suspend fun deleteCard(id: Long) {
         cardDao.deleteById(id)
     }
 
-    override suspend fun setFavorite(id: String, isFavorite: Boolean) {
+    override suspend fun setFavorite(id: Long, isFavorite: Boolean) {
         cardDao.setFavorite(id, isFavorite)
     }
 
-    override suspend fun setActive(id: String, isActive: Boolean) {
+    override suspend fun setActive(id: Long, isActive: Boolean) {
         cardDao.setActive(id, isActive)
     }
 
-    override suspend fun updateLimits(id: String, dayLimit: Double, nightLimit: Double) {
+    override suspend fun updateLimits(id: Long, dayLimit: Double, nightLimit: Double) {
         cardDao.updateLimits(id, dayLimit, nightLimit)
     }
 
@@ -72,4 +72,3 @@ class RoomCardRepository(
         return cardDao.getByAccount(accountId).isNotEmpty()
     }
 }
-

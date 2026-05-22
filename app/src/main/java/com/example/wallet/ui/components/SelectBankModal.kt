@@ -42,7 +42,6 @@ import com.example.wallet.model.CardModel
 import com.example.wallet.utils.ServiceLocator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.UUID
 import kotlin.random.Random
 
 private enum class ModalStep {
@@ -60,13 +59,13 @@ private enum class ModalStep {
 fun SelectBankModal(
     onDismiss: () -> Unit,
     // agora retorna o id do cartão criado para permitir seleção/rolagem
-    onCardCreated: (String) -> Unit
+    onCardCreated: (Long) -> Unit
 ) {
     var currentStep by remember { mutableStateOf(ModalStep.SELECT_BANK) }
     var selectedBank by remember { mutableStateOf<BankAccount?>(null) }
     var selectedBrand by remember { mutableStateOf<String?>(null) }
     // guarda o id do cartão criado para repassar no step de sucesso
-    var createdCardId by remember { mutableStateOf<String?>(null) }
+    var createdCardId by remember { mutableStateOf<Long?>(null) }
 
     // Estados do Formulário
     var cardName by remember { mutableStateOf("") }
@@ -170,15 +169,14 @@ fun SelectBankModal(
                             val limitValue = cardLimit.toDoubleOrNull() ?: 0.0
                             val finalName = if (cardName.isBlank()) "${selectedBank?.name} $selectedBrand" else cardName
                             val newCard = CardModel(
-                                id = UUID.randomUUID().toString(),
                                 name = finalName,
                                 lastDigits = Random.nextInt(1000, 9999).toString(),
                                 limit = limitValue
                             )
                             coroutineScope.launch {
-                                ServiceLocator.cardRepository.addCard(newCard)
+                                val generatedId = ServiceLocator.cardRepository.addCard(newCard)
                                 // armazena o id para a tela de sucesso repassar
-                                createdCardId = newCard.id
+                                createdCardId = generatedId
                                 currentStep = ModalStep.CARD_CREATED_SUCCESS
                             }
                         },

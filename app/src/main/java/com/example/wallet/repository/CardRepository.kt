@@ -8,12 +8,12 @@ interface CardRepository {
     fun observeCards(): Flow<List<CardModel>>
 
     suspend fun getCards(): List<CardModel>
-    suspend fun getCardById(id: String): CardModel?
-    suspend fun addCard(card: CardModel)
+    suspend fun getCardById(id: Long): CardModel?
+    suspend fun addCard(card: CardModel): Long
     suspend fun updateCard(card: CardModel)
-    suspend fun deleteCard(id: String)
-    suspend fun setFavorite(id: String, isFavorite: Boolean)
-    suspend fun setActive(id: String, isActive: Boolean)
-    suspend fun updateLimits(id: String, dayLimit: Double, nightLimit: Double)
+    suspend fun deleteCard(id: Long)
+    suspend fun setFavorite(id: Long, isFavorite: Boolean)
+    suspend fun setActive(id: Long, isActive: Boolean)
+    suspend fun updateLimits(id: Long, dayLimit: Double, nightLimit: Double)
     suspend fun hasCards(): Boolean
 }

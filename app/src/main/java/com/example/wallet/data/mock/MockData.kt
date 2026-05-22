@@ -13,7 +13,7 @@ import com.example.wallet.model.UserModel
 object MockData {
 
     val user: UserModel = UserModel(
-        id = "u-1",
+        id = 1L,
         name = "Maria Silva",
         email = "maria.silva@email.com"
     )
@@ -22,11 +22,11 @@ object MockData {
     val cards: MutableList<CardModel> = mutableListOf()
 
     val purchases: List<PurchaseModel> = listOf(
-        PurchaseModel(id = "p-1", title = "Supermercado",   amount = 245.90, date = "12/05/2026"),
-        PurchaseModel(id = "p-2", title = "Streaming",      amount =  39.90, date = "10/05/2026"),
-        PurchaseModel(id = "p-3", title = "Restaurante",    amount = 128.50, date = "08/05/2026"),
-        PurchaseModel(id = "p-4", title = "Combustível",    amount = 200.00, date = "05/05/2026"),
-        PurchaseModel(id = "p-5", title = "Farmácia",       amount =  76.20, date = "03/05/2026")
+        PurchaseModel(id = 1L, title = "Supermercado",   amount = 245.90, date = "12/05/2026"),
+        PurchaseModel(id = 2L, title = "Streaming",      amount =  39.90, date = "10/05/2026"),
+        PurchaseModel(id = 3L, title = "Restaurante",    amount = 128.50, date = "08/05/2026"),
+        PurchaseModel(id = 4L, title = "Combustível",    amount = 200.00, date = "05/05/2026"),
+        PurchaseModel(id = 5L, title = "Farmácia",       amount =  76.20, date = "03/05/2026")
     )
 
     val banks: MutableList<BankAccount> = mutableListOf(

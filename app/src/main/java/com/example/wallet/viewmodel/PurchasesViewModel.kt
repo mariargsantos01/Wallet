@@ -37,8 +37,8 @@ class PurchasesViewModel(
     private val _cards = MutableStateFlow<List<CardModel>>(emptyList())
     val cards: StateFlow<List<CardModel>> = _cards.asStateFlow()
 
-    private val _selectedCardId = MutableStateFlow<String?>(null)
-    val selectedCardId: StateFlow<String?> = _selectedCardId.asStateFlow()
+    private val _selectedCardId = MutableStateFlow<Long?>(null)
+    val selectedCardId: StateFlow<Long?> = _selectedCardId.asStateFlow()
 
     init {
         observeCards()
@@ -73,7 +73,7 @@ class PurchasesViewModel(
         }
     }
 
-    fun selectCard(cardId: String) {
+    fun selectCard(cardId: Long) {
         _selectedCardId.value = cardId
     }
 

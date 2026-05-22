@@ -136,10 +136,10 @@ fun AppNavHost(
         composable(
             route = Routes.CardDetails.route,
             arguments = listOf(navArgument(Routes.CardDetails.ARG_CARD_ID) {
-                type = NavType.StringType
+                type = NavType.LongType
             })
         ) { entry ->
-            val cardId = entry.arguments?.getString(Routes.CardDetails.ARG_CARD_ID).orEmpty()
+            val cardId = entry.arguments?.getLong(Routes.CardDetails.ARG_CARD_ID) ?: 0L
             CardDetailsScreen(
                 cardId = cardId,
                 onBack = { navController.popBackStack() }

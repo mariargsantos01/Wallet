@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -91,10 +91,10 @@ fun LoginScreen(
         AppTextField(
             value = username,
             onValueChange = viewModel::onUsernameChange,
-            label = "Email",
-            placeholder = "seu@email.com",
-            leadingIcon = Icons.Default.Email,
-            keyboardType = KeyboardType.Email
+            label = "Usuário",
+            placeholder = "joao.silva",
+            leadingIcon = Icons.Default.Person,
+            keyboardType = KeyboardType.Text
         )
 
         Spacer(Modifier.height(20.dp))

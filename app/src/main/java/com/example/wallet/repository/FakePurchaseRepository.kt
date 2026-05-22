@@ -13,18 +13,18 @@ class FakePurchaseRepository : PurchaseRepository {
 
     override fun observePurchases(): Flow<List<PurchaseModel>> = _items.asStateFlow()
 
-    override fun observePurchasesByCard(cardId: String): Flow<List<PurchaseModel>> = _items.asStateFlow()
+    override fun observePurchasesByCard(cardId: Long): Flow<List<PurchaseModel>> = _items.asStateFlow()
 
     override suspend fun getPurchases(): List<PurchaseModel> {
         delay(400)
         return _items.value
     }
 
-    override suspend fun addPurchase(purchase: PurchaseModel, cardId: String?) {
+    override suspend fun addPurchase(purchase: PurchaseModel, cardId: Long?) {
         _items.value = _items.value + purchase
     }
 
-    override suspend fun deletePurchase(id: String) {
+    override suspend fun deletePurchase(id: Long) {
         _items.value = _items.value.filterNot { it.id == id }
     }
 

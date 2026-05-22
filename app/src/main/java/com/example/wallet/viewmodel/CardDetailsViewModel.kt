@@ -18,7 +18,7 @@ class CardDetailsViewModel(
     private val _uiState = MutableStateFlow(UiState<CardModel>())
     val uiState: StateFlow<UiState<CardModel>> = _uiState.asStateFlow()
 
-    fun loadCard(cardId: String) {
+    fun loadCard(cardId: Long) {
         viewModelScope.launch {
             _uiState.value = UiState(isLoading = true)
             try {
@@ -50,4 +50,3 @@ class CardDetailsViewModel(
         }
     }
 }
-

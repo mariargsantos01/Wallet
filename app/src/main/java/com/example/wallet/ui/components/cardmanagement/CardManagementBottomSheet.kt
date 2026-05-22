@@ -387,7 +387,7 @@ private fun CardManagementBottomSheetPreview() {
 
         CardManagementBottomSheet(
             card = CardModel(
-                id = "1",
+                id = 1L,
                 name = "João da Silva",
                 lastDigits = "4523",
                 limit = 5000.0

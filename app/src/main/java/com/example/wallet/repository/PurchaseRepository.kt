@@ -8,10 +8,10 @@ interface PurchaseRepository {
     fun observePurchases(): Flow<List<PurchaseModel>>
 
     /** Compras de um cartão específico. Um cartão novo retorna lista vazia. */
-    fun observePurchasesByCard(cardId: String): Flow<List<PurchaseModel>>
+    fun observePurchasesByCard(cardId: Long): Flow<List<PurchaseModel>>
 
     suspend fun getPurchases(): List<PurchaseModel>
-    suspend fun addPurchase(purchase: PurchaseModel, cardId: String? = null)
-    suspend fun deletePurchase(id: String)
+    suspend fun addPurchase(purchase: PurchaseModel, cardId: Long? = null)
+    suspend fun deletePurchase(id: Long)
     suspend fun clearHistory()
 }

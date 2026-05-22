@@ -29,7 +29,7 @@ import com.example.wallet.viewmodel.CardDetailsViewModel
 
 @Composable
 fun CardDetailsScreen(
-    cardId: String,
+    cardId: Long,
     onBack: () -> Unit,
     viewModel: CardDetailsViewModel = viewModel()
 ) {

@@ -13,7 +13,7 @@ class CardPreferencesManager(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun saveCardState(cardId: String, state: CardManagementState) {
+    fun saveCardState(cardId: Long, state: CardManagementState) {
         prefs.edit()
             .putBoolean(key(cardId, KEY_FAVORITE), state.isFavorite)
             .putBoolean(key(cardId, KEY_ACTIVE), state.isActive)
@@ -24,7 +24,7 @@ class CardPreferencesManager(context: Context) {
             .apply()
     }
 
-    fun getCardState(cardId: String): CardManagementState? {
+    fun getCardState(cardId: Long): CardManagementState? {
         if (!prefs.getBoolean(key(cardId, KEY_HAS_SAVED), false)) {
             return null // Nenhum estado salvo → usar padrão
         }
@@ -37,7 +37,7 @@ class CardPreferencesManager(context: Context) {
         )
     }
 
-    fun removeCardState(cardId: String) {
+    fun removeCardState(cardId: Long) {
         prefs.edit()
             .remove(key(cardId, KEY_FAVORITE))
             .remove(key(cardId, KEY_ACTIVE))
@@ -48,7 +48,7 @@ class CardPreferencesManager(context: Context) {
             .apply()
     }
 
-    private fun key(cardId: String, field: String) = "${cardId}_$field"
+    private fun key(cardId: Long, field: String) = "${cardId}_$field"
 
     companion object {
         private const val PREFS_NAME = "card_management_prefs"
@@ -60,4 +60,3 @@ class CardPreferencesManager(context: Context) {
         private const val KEY_HAS_SAVED = "has_saved"
     }
 }
-

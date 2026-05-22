@@ -29,7 +29,7 @@ import com.example.wallet.data.local.entity.PurchaseEntity
         BankAccountEntity::class,
         BankConnectionEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -55,7 +55,7 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     // Para protótipos: estratégia destrutiva.
                     // Substituir por Migrations reais antes de produção.
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                     .also { INSTANCE = it }
             }

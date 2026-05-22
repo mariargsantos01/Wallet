@@ -31,9 +31,9 @@ import com.example.wallet.model.PurchaseModel
     indices = [Index(value = ["accountId"]), Index(value = ["cardId"])]
 )
 data class PurchaseEntity(
-    @PrimaryKey val id: String,
-    val accountId: String,
-    val cardId: String? = null,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    val accountId: Long,
+    val cardId: Long? = null,
     val title: String,
     val amount: Double,
     val date: String,
@@ -46,4 +46,3 @@ data class PurchaseEntity(
         date = date
     )
 }
-

@@ -32,7 +32,6 @@ import androidx.room.Index
     indices = [Index("bankName"), Index("accountId")]
 )
 data class BankConnectionEntity(
-    val accountId: String,
+    val accountId: Long,
     val bankName: String
 )
-
