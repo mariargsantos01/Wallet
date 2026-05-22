@@ -30,8 +30,8 @@ object MockData {
     )
 
     val banks: MutableList<BankAccount> = mutableListOf(
-        BankAccount("Nubank", Color(0xFF8A05BE), true, listOf("Mastercard")),
-        BankAccount("Itaú", Color(0xFFFF7900), true, listOf("Visa", "Mastercard", "Elo")),
+        BankAccount("Nubank", Color(0xFF8A05BE), false, listOf("Mastercard")),
+        BankAccount("Itaú", Color(0xFFFF7900), false, listOf("Visa", "Mastercard", "Elo")),
         BankAccount("Bradesco", Color(0xFFCC092F), false, listOf("Visa", "Mastercard", "Elo")),
         BankAccount("Santander", Color(0xFFEC0000), false, listOf("Visa", "Mastercard")),
         BankAccount("Banco do Brasil", Color(0xFFF9D70B), false, listOf("Visa", "Mastercard", "Elo")),

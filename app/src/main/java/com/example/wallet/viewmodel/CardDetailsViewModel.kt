@@ -34,7 +34,20 @@ class CardDetailsViewModel(
         }
     }
 
-    fun blockCard() { /* placeholder */ }
-    fun changeLimit() { /* placeholder */ }
+    fun blockCard() {
+        val card = _uiState.value.data ?: return
+        viewModelScope.launch {
+            cardRepository.setActive(card.id, !card.isActive)
+            _uiState.value = UiState(data = card.copy(isActive = !card.isActive))
+        }
+    }
+
+    fun changeLimit(dayLimit: Double, nightLimit: Double) {
+        val card = _uiState.value.data ?: return
+        viewModelScope.launch {
+            cardRepository.updateLimits(card.id, dayLimit, nightLimit)
+            _uiState.value = UiState(data = card.copy(dayLimit = dayLimit, nightLimit = nightLimit))
+        }
+    }
 }
 

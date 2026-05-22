@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.wallet.model.PurchaseModel
+// ...existing code...
 import com.example.wallet.ui.components.CardItem
 import com.example.wallet.ui.components.ErrorView
 import com.example.wallet.ui.components.LoadingView
@@ -42,6 +43,7 @@ import com.example.wallet.ui.components.SecondaryButton
 import com.example.wallet.ui.components.SelectBankModal
 import com.example.wallet.ui.components.TopBar
 import com.example.wallet.viewmodel.MyCardsViewModel
+import com.example.wallet.viewmodel.PurchasesViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -50,7 +52,8 @@ fun MyCardsScreen(
     onNavigate: (String) -> Unit,
     onCardClick: (String) -> Unit,
     onCreateCard: () -> Unit,
-    viewModel: MyCardsViewModel = viewModel()
+    viewModel: MyCardsViewModel = viewModel(),
+    purchasesViewModel: PurchasesViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -59,19 +62,20 @@ fun MyCardsScreen(
 
     var showBankModal by remember { mutableStateOf(false) }
 
-    val mockPurchases = remember {
-        listOf(
-            PurchaseModel("1", "Alimentação", 45.90, "Hoje, 12:30"),
-            PurchaseModel("2", "Cinema", 32.00, "Ontem, 18:00"),
-            PurchaseModel("3", "Farmácia", 15.50, "10 Out, 10:15"),
-            PurchaseModel("4", "Supermercado", 120.00, "08 Out, 14:20")
-        )
-    }
+    // Observa compras do cartão selecionado
+    val purchasesState by purchasesViewModel.uiState.collectAsStateWithLifecycle()
+    val purchases = purchasesState.data ?: emptyList()
+
+    // Guarda um id pendente quando um cartão é criado — após recarregar os cartões
+    // iremos rolar até ele e selecionar no PurchasesViewModel.
+    var pendingSelectCardId by remember { mutableStateOf<String?>(null) }
 
     if (showBankModal) {
         SelectBankModal(
             onDismiss = { showBankModal = false },
-            onCardCreated = {
+            onCardCreated = { newCardId ->
+                // guarda pendente e solicita recarga dos cartões
+                pendingSelectCardId = newCardId
                 showBankModal = false
                 viewModel.load()
             }
@@ -230,15 +234,39 @@ fun MyCardsScreen(
                             modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
                         )
 
-                        mockPurchases.forEach { purchase ->
-                            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Column {
-                                    Text(text = purchase.title, fontWeight = FontWeight.Medium)
-                                    Text(text = purchase.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                        // Quando os cartões mudarem, rolamos para o cartão criado (se houver)
+                        LaunchedEffect(cards) {
+                            pendingSelectCardId?.let { id ->
+                                val idx = cards.indexOfFirst { it.id == id }
+                                if (idx >= 0) {
+                                    scope.launch { pagerState.animateScrollToPage(idx) }
+                                    purchasesViewModel.selectCard(id)
+                                    pendingSelectCardId = null
                                 }
-                                Text(text = "-R$ ${"%.2f".format(purchase.amount)}", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                             }
-                            HorizontalDivider(thickness = 0.5.dp)
+                        }
+
+                        // Mantém o cartão selecionado em sincronia com o pager
+                        LaunchedEffect(pagerState.currentPage, cards) {
+                            if (cards.isNotEmpty() && pagerState.currentPage in cards.indices) {
+                                purchasesViewModel.selectCard(cards[pagerState.currentPage].id)
+                            }
+                        }
+
+                        when {
+                            purchasesState.isLoading -> LoadingView()
+                            purchasesState.error != null -> ErrorView(message = purchasesState.error!!, onRetry = purchasesViewModel::load)
+                            purchases.isEmpty() -> Text("Nenhuma compra registrada para este cartão", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            else -> purchases.forEach { purchase ->
+                                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Column {
+                                        Text(text = purchase.title, fontWeight = FontWeight.Medium)
+                                        Text(text = purchase.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                                    }
+                                    Text(text = "-R$ ${"%.2f".format(purchase.amount)}", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                                }
+                                HorizontalDivider(thickness = 0.5.dp)
+                            }
                         }
                     }
                 }

@@ -12,6 +12,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.wallet.navigation.AppNavHost
 import com.example.wallet.ui.screens.SplashScreen
 import com.example.wallet.ui.theme.WalletTheme
+import com.example.wallet.utils.ServiceLocator
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +20,9 @@ class MainActivity : ComponentActivity() {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Inicializa o banco Room + repositories antes de qualquer ViewModel.
+        ServiceLocator.init(applicationContext)
 
         // Mantém a splash nativa visível até o Compose começar a desenhar.
         var keepNativeSplash = true

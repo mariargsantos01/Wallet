@@ -9,6 +9,8 @@ import com.example.wallet.utils.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 class MyCardsViewModel(
@@ -18,17 +20,16 @@ class MyCardsViewModel(
     private val _uiState = MutableStateFlow(UiState<List<CardModel>>())
     val uiState: StateFlow<UiState<List<CardModel>>> = _uiState.asStateFlow()
 
-    init { load() }
+    init { observe() }
 
-    fun load() {
+    private fun observe() {
         viewModelScope.launch {
-            _uiState.value = UiState(isLoading = true)
-            try {
-                val cards = cardRepository.getCards()
-                _uiState.value = UiState(data = cards)
-            } catch (e: Exception) {
-                _uiState.value = UiState(error = e.message ?: "Erro ao carregar")
-            }
+            cardRepository.observeCards()
+                .onStart { _uiState.value = UiState(isLoading = true) }
+                .catch { e -> _uiState.value = UiState(error = e.message ?: "Erro ao carregar") }
+                .collect { cards -> _uiState.value = UiState(data = cards) }
         }
     }
+
+    fun load() = observe()
 }

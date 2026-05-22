@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.wallet.data.remote.LoginRequest
 import com.example.wallet.repository.AuthRepository
 import com.example.wallet.repository.CardRepository
+import com.example.wallet.repository.UserRepository
 import com.example.wallet.state.UiState
 import com.example.wallet.utils.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,8 @@ data class LoginResult(val hasCards: Boolean)
 
 class LoginViewModel(
     private val authRepository: AuthRepository = AuthRepository(),
-    private val cardRepository: CardRepository = ServiceLocator.cardRepository
+    private val cardRepository: CardRepository = ServiceLocator.cardRepository,
+    private val userRepository: UserRepository = ServiceLocator.userRepository
 ) : ViewModel() {
 
     private val _username = MutableStateFlow("")
@@ -40,8 +42,9 @@ class LoginViewModel(
                 )
 
                 if (response.isSuccessful) {
-                    // Aqui você salvaria os tokens (SharedPreferences/DataStore)
-                    // Por enquanto, seguimos o fluxo original de verificar cartões
+                    // Persiste a conta localmente (Room) para que cartões/transações
+                    // possam ser associados e recuperados após logout/relogin.
+                    userRepository.login(username.value, password.value)
                     val hasCards = cardRepository.hasCards()
                     _uiState.value = UiState(data = LoginResult(hasCards))
                     onSuccess(hasCards)

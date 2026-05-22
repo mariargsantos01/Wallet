@@ -21,9 +21,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +37,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.wallet.data.mock.MockData
 import com.example.wallet.model.BankAccount
 import com.example.wallet.model.CardModel
 import com.example.wallet.utils.ServiceLocator
@@ -58,25 +59,25 @@ private enum class ModalStep {
 @Composable
 fun SelectBankModal(
     onDismiss: () -> Unit,
-    onCardCreated: () -> Unit
+    // agora retorna o id do cartão criado para permitir seleção/rolagem
+    onCardCreated: (String) -> Unit
 ) {
     var currentStep by remember { mutableStateOf(ModalStep.SELECT_BANK) }
     var selectedBank by remember { mutableStateOf<BankAccount?>(null) }
     var selectedBrand by remember { mutableStateOf<String?>(null) }
+    // guarda o id do cartão criado para repassar no step de sucesso
+    var createdCardId by remember { mutableStateOf<String?>(null) }
 
     // Estados do Formulário
     var cardName by remember { mutableStateOf("") }
     var cardLimit by remember { mutableStateOf("") }
     var cardType by remember { mutableStateOf("Virtual") }
 
-    // Carrega dados da fonte de verdade (MockData)
-    var connectedBanks by remember {
-        mutableStateOf(MockData.banks.filter { it.isConnected })
-    }
-
-    var otherBanks by remember {
-        mutableStateOf(MockData.banks.filter { !it.isConnected })
-    }
+    // Fonte de verdade reativa por usuário (Room + SessionManager).
+    val banks by ServiceLocator.bankRepository.observeBanks()
+        .collectAsState(initial = emptyList())
+    val connectedBanks = banks.filter { it.isConnected }
+    val otherBanks = banks.filter { !it.isConnected }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -101,6 +102,16 @@ fun SelectBankModal(
                             selectedBank = bank
                             currentStep = if (bank.isConnected) ModalStep.SELECT_BRAND else ModalStep.CONNECT_BANK
                         },
+                        onDisconnectBank = { bank ->
+                            coroutineScope.launch {
+                                ServiceLocator.bankRepository.disconnect(bank.name)
+                            }
+                        },
+                        onDisconnectAll = {
+                            coroutineScope.launch {
+                                ServiceLocator.bankRepository.disconnectAll()
+                            }
+                        },
                         onDismiss = onDismiss
                     )
                 }
@@ -117,19 +128,11 @@ fun SelectBankModal(
                 ModalStep.CONNECTING -> {
                     ConnectingStep {
                         val bank = selectedBank!!
-                        val connectedBank = bank.copy(isConnected = true)
-                        
-                        // Persiste a conexão na fonte de dados global
-                        val index = MockData.banks.indexOfFirst { it.name == bank.name }
-                        if (index != -1) {
-                            MockData.banks[index] = connectedBank
+                        coroutineScope.launch {
+                            ServiceLocator.bankRepository.connect(bank.name)
+                            selectedBank = bank.copy(isConnected = true)
+                            currentStep = ModalStep.BANK_CONNECTED_SUCCESS
                         }
-
-                        // Atualiza as listas locais para recomposição
-                        otherBanks = otherBanks.filter { it.name != bank.name }
-                        connectedBanks = connectedBanks + connectedBank
-                        selectedBank = connectedBank
-                        currentStep = ModalStep.BANK_CONNECTED_SUCCESS
                     }
                 }
 
@@ -174,6 +177,8 @@ fun SelectBankModal(
                             )
                             coroutineScope.launch {
                                 ServiceLocator.cardRepository.addCard(newCard)
+                                // armazena o id para a tela de sucesso repassar
+                                createdCardId = newCard.id
                                 currentStep = ModalStep.CARD_CREATED_SUCCESS
                             }
                         },
@@ -186,7 +191,8 @@ fun SelectBankModal(
                         bankName = selectedBank?.name ?: "",
                         cardName = cardName,
                         onFinish = {
-                            onCardCreated()
+                            // repassa o id do cartão criado para o chamador
+                            createdCardId?.let { onCardCreated(it) }
                             onDismiss()
                         },
                         onDismiss = onDismiss
@@ -204,19 +210,47 @@ private fun BankListStep(
     connectedBanks: List<BankAccount>,
     otherBanks: List<BankAccount>,
     onBankClick: (BankAccount) -> Unit,
+    onDisconnectBank: (BankAccount) -> Unit,
+    onDisconnectAll: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
         HeaderSection("Selecione o Banco", onDismiss)
         Spacer(Modifier.height(16.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            item { SectionTitle("Bancos Conectados") }
-            items(connectedBanks) { item -> BankItem(item) { onBankClick(item) } }
+            if (connectedBanks.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SectionTitle("Bancos Conectados")
+                        TextButton(onClick = onDisconnectAll) {
+                            Text(
+                                "Desconectar todos",
+                                color = Color(0xFFFF5252),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+                items(connectedBanks) { item ->
+                    BankItem(
+                        bank = item,
+                        onClick = { onBankClick(item) },
+                        onDisconnect = { onDisconnectBank(item) }
+                    )
+                }
+            }
             item {
                 Spacer(Modifier.height(8.dp))
                 SectionTitle("Conectar Outro Banco")
             }
-            items(otherBanks) { item -> BankItem(item) { onBankClick(item) } }
+            items(otherBanks) { item ->
+                BankItem(bank = item, onClick = { onBankClick(item) }, onDisconnect = null)
+            }
         }
     }
 }
@@ -298,7 +332,7 @@ private fun BankConnectedSuccessStep(
             modifier = Modifier.padding(top = 8.dp).padding(horizontal = 24.dp)
         )
         Spacer(Modifier.height(24.dp))
-        BankItem(bank, onClick = {})
+        BankItem(bank, onClick = {}, onDisconnect = null)
         Spacer(Modifier.height(40.dp))
         PrimaryButtonFull("Criar Cartão Virtual") { onCreateCard() }
         Spacer(Modifier.height(12.dp))
@@ -501,10 +535,14 @@ private fun SectionTitle(title: String) {
 }
 
 @Composable
-private fun BankItem(bank: BankAccount, onClick: () -> Unit) {
+private fun BankItem(
+    bank: BankAccount,
+    onClick: () -> Unit,
+    onDisconnect: (() -> Unit)? = null
+) {
     Surface(onClick = onClick, color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                 Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(bank.color))
                 Spacer(Modifier.width(16.dp))
                 Column {
@@ -517,6 +555,17 @@ private fun BankItem(bank: BankAccount, onClick: () -> Unit) {
                     Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF00C853)))
                     Spacer(Modifier.width(4.dp))
                     Text("Conectado", style = MaterialTheme.typography.labelSmall, color = Color(0xFF00C853))
+                    if (onDisconnect != null) {
+                        Spacer(Modifier.width(8.dp))
+                        IconButton(onClick = onDisconnect, modifier = Modifier.size(32.dp)) {
+                            Icon(
+                                Icons.Default.LinkOff,
+                                contentDescription = "Desconectar ${bank.name}",
+                                tint = Color(0xFFFF5252),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 }
             } else {
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)

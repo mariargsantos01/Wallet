@@ -4,14 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wallet.data.remote.UserRequestDTO
 import com.example.wallet.repository.AuthRepository
+import com.example.wallet.repository.UserRepository
 import com.example.wallet.state.UiState
+import com.example.wallet.utils.ServiceLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class SignUpViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
+    private val authRepository: AuthRepository = AuthRepository(),
+    private val userRepository: UserRepository = ServiceLocator.userRepository
 ) : ViewModel() {
 
     private val _fullName = MutableStateFlow("")
@@ -47,6 +50,7 @@ class SignUpViewModel(
                 )
                 val response = authRepository.createUser(request)
                 if (response.isSuccessful) {
+                    userRepository.signUp(_fullName.value, _email.value, _password.value)
                     _uiState.value = UiState(data = Unit)
                     onSuccess()
                 } else {
