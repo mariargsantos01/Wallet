@@ -88,7 +88,7 @@ fun CardDetailsScreen(
 
                         SecondaryButton(
                             text = "Alterar limite",
-                            onClick = { viewModel.changeLimit() }
+                            onClick = { viewModel.changeLimit(card.dayLimit, card.nightLimit) }
                         )
 
                         DestructiveButton(

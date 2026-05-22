@@ -21,8 +21,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Inicializar ServiceLocator com context
-        ServiceLocator.init(this)
+        // Inicializa o banco Room + repositories antes de qualquer ViewModel.
+        ServiceLocator.init(applicationContext)
 
         // Mantém a splash nativa visível até o Compose começar a desenhar.
         var keepNativeSplash = true
