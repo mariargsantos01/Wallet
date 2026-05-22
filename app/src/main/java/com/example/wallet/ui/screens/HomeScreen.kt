@@ -34,17 +34,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-// ...existing code...
 import com.example.wallet.ui.components.CardItem
 import com.example.wallet.ui.components.ErrorView
 import com.example.wallet.ui.components.LoadingView
 import com.example.wallet.ui.components.PrimaryButton
 import com.example.wallet.ui.components.SecondaryButton
 import com.example.wallet.ui.components.SelectBankModal
+import com.example.wallet.ui.components.cardmanagement.CardManagementBottomSheet
 import com.example.wallet.ui.components.TopBar
 import com.example.wallet.viewmodel.MyCardsViewModel
 import com.example.wallet.viewmodel.PurchasesViewModel
+import com.example.wallet.viewmodel.CardManagementViewModel
 import kotlinx.coroutines.launch
+import com.example.wallet.model.CardModel
 
 @Composable
 fun MyCardsScreen(
@@ -53,224 +55,232 @@ fun MyCardsScreen(
     onCardClick: (String) -> Unit,
     onCreateCard: () -> Unit,
     viewModel: MyCardsViewModel = viewModel(),
-    purchasesViewModel: PurchasesViewModel = viewModel()
+    purchasesViewModel: PurchasesViewModel = viewModel(),
+    cardManagementViewModel: CardManagementViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val cards = state.data ?: emptyList()
-    val pagerState = rememberPagerState(pageCount = { cards.size })
-
+    // State for overlays and modal
     var showBankModal by remember { mutableStateOf(false) }
-
-    // Observa compras do cartão selecionado
+    var showManagementSheet by remember { mutableStateOf(false) }
+    var managementCard by remember { mutableStateOf<CardModel?>(null) }
+    var pendingSelectCardId by remember { mutableStateOf<String?>(null) }
     val purchasesState by purchasesViewModel.uiState.collectAsStateWithLifecycle()
     val purchases = purchasesState.data ?: emptyList()
+    val pagerState = rememberPagerState(pageCount = { cards.size })
+    val cmState by cardManagementViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Guarda um id pendente quando um cartão é criado — após recarregar os cartões
-    // iremos rolar até ele e selecionar no PurchasesViewModel.
-    var pendingSelectCardId by remember { mutableStateOf<String?>(null) }
-
-    if (showBankModal) {
-        SelectBankModal(
-            onDismiss = { showBankModal = false },
-            onCardCreated = { newCardId ->
-                // guarda pendente e solicita recarga dos cartões
-                pendingSelectCardId = newCardId
-                showBankModal = false
-                viewModel.load()
-            }
-        )
-    }
-
-    Scaffold(
-        topBar = {
-            TopBar(
-                title = "Meus Cartões",
-                actions = {
-                    if (cards.isNotEmpty()) {
-                        Surface(
-                            onClick = { /* favoritar */ },
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.padding(end = 16.dp).size(40.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Default.Star,
-                                    contentDescription = "Favoritar",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(20.dp)
-                                )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopBar(
+                    title = "Meus Cartões",
+                    actions = {
+                        if (cards.isNotEmpty()) {
+                            Surface(
+                                onClick = { /* favoritar */ },
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.padding(end = 16.dp).size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.Star,
+                                        contentDescription = "Favoritar",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
                         }
                     }
+                )
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { padding ->
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                when {
+                    state.isLoading -> LoadingView()
+                    state.error != null -> ErrorView(message = state.error!!, onRetry = viewModel::load)
+                    cards.isEmpty() -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Top
+                        ) {
+                            Spacer(Modifier.height(20.dp))
+                            Surface(
+                                modifier = Modifier.size(80.dp),
+                                color = Color(0xFF10141D),
+                                shape = RoundedCornerShape(20.dp),
+                                border = BorderStroke(1.dp, Color(0xFF1E2633))
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.CreditCard,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(32.dp),
+                                        tint = Color(0xFF637388)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(32.dp))
+                            Text(
+                                text = "Adicione seu primeiro cartão",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                text = "Cadastre seus cartões para ter acesso rápido e seguro às informações",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF8E99A8),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
+                            Spacer(Modifier.height(48.dp))
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(180.dp).clickable { showBankModal = true },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val stroke = Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
+                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                    drawRoundRect(
+                                        color = Color(0xFF1E2633),
+                                        style = stroke,
+                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx())
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Surface(modifier = Modifier.size(56.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                                        }
+                                    }
+                                    Spacer(Modifier.height(16.dp))
+                                    Text(text = "Adicionar cartão", color = Color(0xFF8E99A8))
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        Column(
+                            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "${cards.size} cartão(ões) cadastrados",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
+                            )
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) } },
+                                    enabled = pagerState.currentPage > 0
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+                                }
+                                HorizontalPager(state = pagerState, modifier = Modifier.weight(1f), pageSpacing = 16.dp) { page ->
+                                    CardItem(card = cards[page], onClick = { onCardClick(cards[page].id) })
+                                }
+                                IconButton(
+                                    onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } },
+                                    enabled = pagerState.currentPage < cards.size - 1
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                                }
+                            }
+                            Text(text = "${pagerState.currentPage + 1} de ${cards.size}", style = MaterialTheme.typography.bodySmall)
+                            Spacer(Modifier.height(24.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                SecondaryButton(
+                                    text = "Gerenciar",
+                                    onClick = {
+                                        if (cards.isNotEmpty()) {
+                                            val card = cards.getOrNull(pagerState.currentPage) ?: cards.first()
+                                            managementCard = card
+                                            showManagementSheet = true
+                                            cardManagementViewModel.openManagement(card)
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                PrimaryButton(
+                                    text = "+ Novo Cartão",
+                                    onClick = { showBankModal = true },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Spacer(Modifier.height(32.dp))
+                            Text(
+                                text = "ÚLTIMAS COMPRAS",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
+                            )
+                            LaunchedEffect(cards) {
+                                pendingSelectCardId?.let { id ->
+                                    val idx = cards.indexOfFirst { it.id == id }
+                                    if (idx >= 0) {
+                                        scope.launch { pagerState.animateScrollToPage(idx) }
+                                        purchasesViewModel.selectCard(id)
+                                        pendingSelectCardId = null
+                                    }
+                                }
+                            }
+                            LaunchedEffect(pagerState.currentPage, cards) {
+                                if (cards.isNotEmpty() && pagerState.currentPage in cards.indices) {
+                                    purchasesViewModel.selectCard(cards[pagerState.currentPage].id)
+                                }
+                            }
+                            when {
+                                purchasesState.isLoading -> LoadingView()
+                                purchasesState.error != null -> ErrorView(message = purchasesState.error!!, onRetry = purchasesViewModel::load)
+                                purchases.isEmpty() -> Text("Nenhuma compra registrada para este cartão", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                else -> purchases.forEach { purchase ->
+                                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Column {
+                                            Text(text = purchase.title, fontWeight = FontWeight.Medium)
+                                            Text(text = purchase.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                                        }
+                                        Text(text = "-R$ ${"%.2f".format(purchase.amount)}", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                                    }
+                                    HorizontalDivider(thickness = 0.5.dp)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (showManagementSheet && managementCard != null) {
+            CardManagementBottomSheet(
+                card = managementCard!!,
+                state = cmState.managementState,
+                onStateChange = {
+                    cardManagementViewModel.updateManagementState(it)
+                },
+                onDismiss = {
+                    showManagementSheet = false
+                    cardManagementViewModel.closeManagement()
+                },
+                onDeleteCard = {
+                    cardManagementViewModel.onDeleteCardClicked()
+                },
+                visible = true
+            )
+        }
+        if (showBankModal) {
+            SelectBankModal(
+                onDismiss = { showBankModal = false },
+                onCardCreated = { newCardId ->
+                    pendingSelectCardId = newCardId
+                    showBankModal = false
+                    viewModel.load()
                 }
             )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when {
-                state.isLoading -> LoadingView()
-                state.error != null -> ErrorView(message = state.error!!, onRetry = viewModel::load)
-                cards.isEmpty() -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
-                    ) {
-                        Spacer(Modifier.height(20.dp))
-                        Surface(
-                            modifier = Modifier.size(80.dp),
-                            color = Color(0xFF10141D),
-                            shape = RoundedCornerShape(20.dp),
-                            border = BorderStroke(1.dp, Color(0xFF1E2633))
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Default.CreditCard,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(32.dp),
-                                    tint = Color(0xFF637388)
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.height(32.dp))
-                        Text(
-                            text = "Adicione seu primeiro cartão",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            text = "Cadastre seus cartões para ter acesso rápido e seguro às informações",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF8E99A8),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 24.dp)
-                        )
-                        Spacer(Modifier.height(48.dp))
-
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(180.dp).clickable { showBankModal = true },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val stroke = Stroke(width = 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))
-                            Canvas(modifier = Modifier.fillMaxSize()) {
-                                drawRoundRect(
-                                    color = Color(0xFF1E2633),
-                                    style = stroke,
-                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx())
-                                )
-                            }
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Surface(modifier = Modifier.size(56.dp), shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-                                    }
-                                }
-                                Spacer(Modifier.height(16.dp))
-                                Text(text = "Adicionar cartão", color = Color(0xFF8E99A8))
-                            }
-                        }
-                    }
-                }
-                else -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "${cards.size} cartão(ões) cadastrados",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
-                        )
-
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(
-                                onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) } },
-                                enabled = pagerState.currentPage > 0
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
-                            }
-
-                            HorizontalPager(state = pagerState, modifier = Modifier.weight(1f), pageSpacing = 16.dp) { page ->
-                                CardItem(card = cards[page], onClick = { onCardClick(cards[page].id) })
-                            }
-
-                            IconButton(
-                                onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } },
-                                enabled = pagerState.currentPage < cards.size - 1
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-                            }
-                        }
-
-                        Text(text = "${pagerState.currentPage + 1} de ${cards.size}", style = MaterialTheme.typography.bodySmall)
-
-                        Spacer(Modifier.height(24.dp))
-
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            SecondaryButton(
-                                text = "Gerenciar",
-                                onClick = { /* gerenciar */ },
-                                modifier = Modifier.weight(1f)
-                            )
-                            PrimaryButton(
-                                text = "+ Novo Cartão",
-                                onClick = { showBankModal = true },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(Modifier.height(32.dp))
-                        Text(
-                            text = "ÚLTIMAS COMPRAS",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
-                        )
-
-                        // Quando os cartões mudarem, rolamos para o cartão criado (se houver)
-                        LaunchedEffect(cards) {
-                            pendingSelectCardId?.let { id ->
-                                val idx = cards.indexOfFirst { it.id == id }
-                                if (idx >= 0) {
-                                    scope.launch { pagerState.animateScrollToPage(idx) }
-                                    purchasesViewModel.selectCard(id)
-                                    pendingSelectCardId = null
-                                }
-                            }
-                        }
-
-                        // Mantém o cartão selecionado em sincronia com o pager
-                        LaunchedEffect(pagerState.currentPage, cards) {
-                            if (cards.isNotEmpty() && pagerState.currentPage in cards.indices) {
-                                purchasesViewModel.selectCard(cards[pagerState.currentPage].id)
-                            }
-                        }
-
-                        when {
-                            purchasesState.isLoading -> LoadingView()
-                            purchasesState.error != null -> ErrorView(message = purchasesState.error!!, onRetry = purchasesViewModel::load)
-                            purchases.isEmpty() -> Text("Nenhuma compra registrada para este cartão", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            else -> purchases.forEach { purchase ->
-                                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Column {
-                                        Text(text = purchase.title, fontWeight = FontWeight.Medium)
-                                        Text(text = purchase.date, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-                                    }
-                                    Text(text = "-R$ ${"%.2f".format(purchase.amount)}", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
-                                }
-                                HorizontalDivider(thickness = 0.5.dp)
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }

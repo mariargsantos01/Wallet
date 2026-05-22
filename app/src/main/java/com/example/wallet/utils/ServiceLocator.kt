@@ -7,6 +7,7 @@ import com.example.wallet.repository.BankRepository
 import com.example.wallet.repository.CardRepository
 import com.example.wallet.repository.PurchaseRepository
 import com.example.wallet.repository.RoomBankRepository
+import com.example.wallet.data.local.CardPreferencesManager
 import com.example.wallet.repository.RoomCardRepository
 import com.example.wallet.repository.RoomPurchaseRepository
 import com.example.wallet.repository.RoomUserRepository
@@ -26,6 +27,7 @@ object ServiceLocator {
 
     private lateinit var database: AppDatabase
     private lateinit var session: SessionManager
+    private lateinit var cardPrefs: CardPreferencesManager
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Volatile private var initialized: Boolean = false
@@ -36,6 +38,7 @@ object ServiceLocator {
             if (initialized) return
             database = AppDatabase.getInstance(context.applicationContext)
             session = SessionManager(context.applicationContext)
+            cardPrefs = CardPreferencesManager(context.applicationContext)
             initialized = true
             // Seed de bancos disponíveis (apenas na primeira execução).
             ioScope.launch {
@@ -53,6 +56,12 @@ object ServiceLocator {
         get() {
             check(initialized) { "ServiceLocator não inicializado." }
             return session
+        }
+
+    val cardPreferencesManager: CardPreferencesManager
+        get() {
+            check(initialized) { "ServiceLocator não inicializado." }
+            return cardPrefs
         }
 
     val cardRepository: CardRepository by lazy {

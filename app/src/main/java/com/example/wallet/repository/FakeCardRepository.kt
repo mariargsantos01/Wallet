@@ -41,10 +41,7 @@ class FakeCardRepository : CardRepository {
         }
     }
 
-    override suspend fun deleteCard(id: String) {
-        MockData.cards.removeAll { it.id == id }
-        _cards.value = MockData.cards.toList()
-    }
+    // ...existing code...
 
     override suspend fun setFavorite(id: String, isFavorite: Boolean) {
         val idx = MockData.cards.indexOfFirst { it.id == id }
@@ -76,6 +73,7 @@ class FakeCardRepository : CardRepository {
     override suspend fun deleteCard(id: String) {
         delay(300)
         MockData.cards.removeAll { it.id == id }
+        _cards.value = MockData.cards.toList()
     }
 
     override suspend fun hasCards(): Boolean {
