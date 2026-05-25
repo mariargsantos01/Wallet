@@ -40,17 +40,18 @@ fun SignUpScreen(
     val username by viewModel.username.collectAsStateWithLifecycle()
     val email by viewModel.email.collectAsStateWithLifecycle()
     val password by viewModel.password.collectAsStateWithLifecycle()
+    val confirmPassword by viewModel.confirmPassword.collectAsStateWithLifecycle()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 28.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(60.dp))
+        Spacer(Modifier.height(64.dp))
 
         Text(
             text = "Criar Conta",
@@ -65,7 +66,7 @@ fun SignUpScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(36.dp))
 
         AppTextField(
             value = fullName,
@@ -74,7 +75,7 @@ fun SignUpScreen(
             placeholder = "Seu nome",
             leadingIcon = Icons.Default.Person
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         AppTextField(
             value = username,
@@ -83,7 +84,7 @@ fun SignUpScreen(
             placeholder = "seu.usuario",
             leadingIcon = Icons.Default.AccountCircle
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         AppTextField(
             value = email,
@@ -93,17 +94,26 @@ fun SignUpScreen(
             leadingIcon = Icons.Default.Email,
             keyboardType = KeyboardType.Email
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         PasswordTextField(
             value = password,
             onValueChange = viewModel::onPasswordChange,
             label = "Senha",
-            placeholder = "********",
+            placeholder = "Mínimo 6 caracteres",
+            leadingIcon = Icons.Default.Lock
+        )
+        Spacer(Modifier.height(20.dp))
+
+        PasswordTextField(
+            value = confirmPassword,
+            onValueChange = viewModel::onConfirmPasswordChange,
+            label = "Confirmar Senha",
+            placeholder = "Repita a senha",
             leadingIcon = Icons.Default.Lock
         )
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(32.dp))
 
         PrimaryButton(
             text = if (state.isLoading) "Cadastrando..." else "Cadastrar",
@@ -112,7 +122,7 @@ fun SignUpScreen(
         )
 
         state.error?.let {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
@@ -120,16 +130,16 @@ fun SignUpScreen(
             )
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(28.dp))
 
         Text(
             text = "Já tem uma conta? Entre aqui",
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.clickable { onBackToLogin() }
         )
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(48.dp))
     }
 }
-

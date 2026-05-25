@@ -1,6 +1,7 @@
 package com.example.wallet.ui.screens
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,8 +28,7 @@ import kotlinx.coroutines.delay
 import androidx.compose.foundation.Image
 
 /**
- * Splash em Compose exibida após a SplashScreen nativa.
- * Faz uma animação simples de fade-in/scale e chama [onFinished] após [durationMs].
+ * Splash em Compose — animação fluida de fade-in + scale com easing suave.
  */
 @Composable
 fun SplashScreen(
@@ -37,11 +36,17 @@ fun SplashScreen(
     durationMs: Long = 1200L
 ) {
     val alpha = remember { Animatable(0f) }
-    val scale = remember { Animatable(0.85f) }
+    val scale = remember { Animatable(0.9f) }
 
     LaunchedEffect(Unit) {
-        alpha.animateTo(1f, animationSpec = tween(500))
-        scale.animateTo(1f, animationSpec = tween(500))
+        alpha.animateTo(
+            1f,
+            animationSpec = tween(600, easing = FastOutSlowInEasing)
+        )
+        scale.animateTo(
+            1f,
+            animationSpec = tween(600, easing = FastOutSlowInEasing)
+        )
         delay(durationMs)
         onFinished()
     }
@@ -60,11 +65,11 @@ fun SplashScreen(
                 painter = painterResource(id = R.drawable.ic_wallet_logo),
                 contentDescription = "Wallet",
                 modifier = Modifier
-                    .size(140.dp)
+                    .size(120.dp)
                     .alpha(alpha.value)
                     .scale(scale.value)
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(28.dp))
             Text(
                 text = "Wallet",
                 style = MaterialTheme.typography.headlineMedium,
@@ -82,4 +87,3 @@ fun SplashScreen(
         }
     }
 }
-

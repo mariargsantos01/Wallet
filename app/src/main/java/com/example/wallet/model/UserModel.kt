@@ -1,8 +1,7 @@
 package com.example.wallet.model
 
 data class UserModel(
-    val id: String,
+    val id: Long = 0L,
     val name: String,
     val email: String
 )
-

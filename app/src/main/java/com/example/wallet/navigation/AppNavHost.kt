@@ -1,5 +1,9 @@
 package com.example.wallet.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
@@ -11,8 +15,16 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.wallet.ui.screens.*
 
+// Ordem das abas do menu inferior para determinar direção do slide
+private val bottomNavOrder = listOf(
+    Routes.MyCards.route,
+    Routes.Purchases.route,
+    Routes.Settings.route
+)
+
 @Composable
 fun AppNavHost(
+    startDestination: String = Routes.Login.route,
     navController: NavHostController = rememberNavController()
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -29,8 +41,9 @@ fun AppNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = Routes.Login.route
+        startDestination = startDestination
     ) {
+
         // ── Login ──────────────────────────────────────────────
         composable(Routes.Login.route) {
             LoginScreen(
@@ -60,7 +73,7 @@ fun AppNavHost(
             )
         }
 
-        // ── Esqueceu Senha (Solicitação) ────────────────────────
+        // ── Esqueceu Senha ────────────────────────────────────
         composable(Routes.ForgotPassword.route) {
             ForgotPasswordScreen(
                 onBackToLogin = { navController.popBackStack() },
@@ -70,7 +83,7 @@ fun AppNavHost(
             )
         }
 
-        // ── Redefinir Senha (Token + Nova Senha) ───────────────
+        // ── Redefinir Senha ───────────────────────────────────
         composable(Routes.ResetPassword.route) {
             ResetPasswordScreen(
                 onResetSuccess = {
@@ -101,7 +114,53 @@ fun AppNavHost(
         }
 
         // ── Meus Cartões ─────────────────────────────────────
-        composable(Routes.MyCards.route) {
+        composable(
+            Routes.MyCards.route,
+            enterTransition = {
+                val fromIndex = bottomNavOrder.indexOf(initialState.destination.route)
+                val toIndex = bottomNavOrder.indexOf(Routes.MyCards.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideIntoContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeIn(tween(300))
+            },
+            exitTransition = {
+                val fromIndex = bottomNavOrder.indexOf(Routes.MyCards.route)
+                val toIndex = bottomNavOrder.indexOf(targetState.destination.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideOutOfContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeOut(tween(300))
+            },
+            popEnterTransition = {
+                val fromIndex = bottomNavOrder.indexOf(initialState.destination.route)
+                val toIndex = bottomNavOrder.indexOf(Routes.MyCards.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideIntoContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeIn(tween(300))
+            },
+            popExitTransition = {
+                val fromIndex = bottomNavOrder.indexOf(Routes.MyCards.route)
+                val toIndex = bottomNavOrder.indexOf(targetState.destination.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideOutOfContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeOut(tween(300))
+            }
+        ) {
             MyCardsScreen(
                 currentRoute = currentRoute,
                 onNavigate = navigateRoot,
@@ -115,12 +174,108 @@ fun AppNavHost(
         }
 
         // ── Compras ───────────────────────────────────────────
-        composable(Routes.Purchases.route) {
-            PurchasesScreen(currentRoute = currentRoute, onNavigate = navigateRoot)
+        composable(
+            Routes.Purchases.route,
+            enterTransition = {
+                val fromIndex = bottomNavOrder.indexOf(initialState.destination.route)
+                val toIndex = bottomNavOrder.indexOf(Routes.Purchases.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideIntoContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeIn(tween(300))
+            },
+            exitTransition = {
+                val fromIndex = bottomNavOrder.indexOf(Routes.Purchases.route)
+                val toIndex = bottomNavOrder.indexOf(targetState.destination.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideOutOfContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeOut(tween(300))
+            },
+            popEnterTransition = {
+                val fromIndex = bottomNavOrder.indexOf(initialState.destination.route)
+                val toIndex = bottomNavOrder.indexOf(Routes.Purchases.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideIntoContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeIn(tween(300))
+            },
+            popExitTransition = {
+                val fromIndex = bottomNavOrder.indexOf(Routes.Purchases.route)
+                val toIndex = bottomNavOrder.indexOf(targetState.destination.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideOutOfContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeOut(tween(300))
+            }
+        ) {
+            PurchasesScreen(
+                currentRoute = currentRoute,
+                onNavigate = navigateRoot,
+                onAddPurchase = { navController.navigate(Routes.AddPurchase.route) }
+            )
         }
 
         // ── Configurações ─────────────────────────────────────
-        composable(Routes.Settings.route) {
+        composable(
+            Routes.Settings.route,
+            enterTransition = {
+                val fromIndex = bottomNavOrder.indexOf(initialState.destination.route)
+                val toIndex = bottomNavOrder.indexOf(Routes.Settings.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideIntoContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeIn(tween(300))
+            },
+            exitTransition = {
+                val fromIndex = bottomNavOrder.indexOf(Routes.Settings.route)
+                val toIndex = bottomNavOrder.indexOf(targetState.destination.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideOutOfContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeOut(tween(300))
+            },
+            popEnterTransition = {
+                val fromIndex = bottomNavOrder.indexOf(initialState.destination.route)
+                val toIndex = bottomNavOrder.indexOf(Routes.Settings.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideIntoContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeIn(tween(300))
+            },
+            popExitTransition = {
+                val fromIndex = bottomNavOrder.indexOf(Routes.Settings.route)
+                val toIndex = bottomNavOrder.indexOf(targetState.destination.route)
+                if (fromIndex >= 0 && toIndex >= 0) {
+                    slideOutOfContainer(
+                        if (toIndex > fromIndex) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
+                } else fadeOut(tween(300))
+            }
+        ) {
             SettingsScreen(
                 currentRoute = currentRoute,
                 onNavigate = navigateRoot,
@@ -128,6 +283,9 @@ fun AppNavHost(
                     navController.navigate(Routes.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onEditProfile = {
+                    navController.navigate(Routes.EditProfile.route)
                 }
             )
         }
@@ -136,12 +294,27 @@ fun AppNavHost(
         composable(
             route = Routes.CardDetails.route,
             arguments = listOf(navArgument(Routes.CardDetails.ARG_CARD_ID) {
-                type = NavType.StringType
+                type = NavType.LongType
             })
         ) { entry ->
-            val cardId = entry.arguments?.getString(Routes.CardDetails.ARG_CARD_ID).orEmpty()
+            val cardId = entry.arguments?.getLong(Routes.CardDetails.ARG_CARD_ID) ?: 0L
             CardDetailsScreen(
                 cardId = cardId,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Adicionar Compra ──────────────────────────────────
+        composable(Routes.AddPurchase.route) {
+            AddPurchaseScreen(
+                onBack = { navController.popBackStack() },
+                onPurchaseAdded = { navController.popBackStack() }
+            )
+        }
+
+        // ── Editar Perfil ─────────────────────────────────────
+        composable(Routes.EditProfile.route) {
+            EditProfileScreen(
                 onBack = { navController.popBackStack() }
             )
         }

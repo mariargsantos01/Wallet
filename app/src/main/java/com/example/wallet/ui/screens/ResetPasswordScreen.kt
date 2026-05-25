@@ -38,7 +38,7 @@ fun ResetPasswordScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -65,7 +65,7 @@ fun ResetPasswordScreen(
             leadingIcon = Icons.Default.VpnKey
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         PasswordTextField(
             value = newPassword,
@@ -75,7 +75,7 @@ fun ResetPasswordScreen(
             leadingIcon = Icons.Default.Lock
         )
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(32.dp))
 
         PrimaryButton(
             text = if (state.isLoading) "Redefinindo..." else "Redefinir Senha",
@@ -84,7 +84,7 @@ fun ResetPasswordScreen(
         )
 
         state.error?.let {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
@@ -93,4 +93,3 @@ fun ResetPasswordScreen(
         }
     }
 }
-

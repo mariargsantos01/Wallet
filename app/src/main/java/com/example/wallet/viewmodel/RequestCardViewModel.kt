@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 data class CreateCardForm(
     val name: String = "",
@@ -38,7 +37,6 @@ class CreateCardViewModel(
             val f = _form.value
             val lastDigits = (1000..9999).random().toString()
             val card = CardModel(
-                id = UUID.randomUUID().toString(),
                 name = "Wallet ${f.cardType}",
                 lastDigits = lastDigits,
                 limit = f.limit.toDoubleOrNull() ?: 1000.0
