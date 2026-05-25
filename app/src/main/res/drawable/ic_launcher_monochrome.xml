@@ -1,65 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Carteira (corpo principal) -->
+    <!-- Carteira (corpo principal) - versão monocromática -->
     <path
         android:pathData="M28,38 L80,38 Q84,38 84,42 L84,70 Q84,74 80,74 L28,74 Q24,74 24,70 L24,42 Q24,38 28,38 Z"
-        android:fillColor="#E94560" />
+        android:fillColor="#000000" />
 
     <!-- Aba superior da carteira -->
     <path
         android:pathData="M30,34 L72,34 Q74,34 74,36 L74,38 L28,38 L28,36 Q28,34 30,34 Z"
-        android:fillColor="#C23152" />
+        android:fillColor="#000000" />
 
-    <!-- Faixa horizontal (detalhe do cartão) -->
+    <!-- Faixa horizontal (detalhe) - recorte -->
     <path
         android:pathData="M24,48 L84,48 L84,54 L24,54 Z"
-        android:fillColor="#C23152" />
+        android:fillColor="#000000"
+        android:alpha="0.6" />
 
-    <!-- Cartão saindo da carteira -->
+    <!-- Cartão saindo -->
     <path
         android:pathData="M52,44 L82,44 Q84,44 84,46 L84,62 Q84,64 82,64 L52,64 Q50,64 50,62 L50,46 Q50,44 52,44 Z"
-        android:fillColor="#FFFFFF"
-        android:alpha="0.9" />
+        android:fillColor="#000000"
+        android:alpha="0.4" />
 
     <!-- Chip do cartão -->
     <path
         android:pathData="M56,50 L64,50 Q65,50 65,51 L65,55 Q65,56 64,56 L56,56 Q55,56 55,55 L55,51 Q55,50 56,50 Z"
-        android:fillColor="#FFD700" />
+        android:fillColor="#000000" />
 
-    <!-- Linhas do chip -->
-    <path
-        android:pathData="M57,50 L57,56 M59,50 L59,56 M61,50 L61,56 M63,50 L63,56"
-        android:fillColor="#00000000"
-        android:strokeWidth="0.4"
-        android:strokeColor="#B8860B" />
-
-    <!-- Círculo decorativo do cartão -->
-    <path
-        android:pathData="M75,59 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0"
-        android:fillColor="#E94560"
-        android:alpha="0.7" />
-    <path
-        android:pathData="M78,59 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0"
-        android:fillColor="#FFD700"
-        android:alpha="0.5" />
-
-    <!-- Cifrão estilizado (símbolo $ pequeno) -->
+    <!-- Cifrão -->
     <path
         android:pathData="M36,58 C36,56 38,55 40,55 C42,55 44,56 44,58 C44,60 42,61 40,61 C38,61 36,62 36,64 C36,66 38,67 40,67 C42,67 44,66 44,64"
         android:fillColor="#00000000"
         android:strokeWidth="1.8"
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#000000"
         android:strokeLineCap="round" />
     <path
         android:pathData="M40,53 L40,55 M40,67 L40,69"
         android:fillColor="#00000000"
         android:strokeWidth="1.8"
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#000000"
         android:strokeLineCap="round" />
 
 </vector>
+
