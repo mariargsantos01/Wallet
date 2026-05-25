@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -194,7 +195,7 @@ fun SpendingDonutChart(
 }
 
 /**
- * Gráfico de barras horizontais mostrando gastos diários.
+ * Gráfico de linha mostrando gastos diários.
  */
 @Composable
 fun DailySpendingChart(
@@ -208,20 +209,24 @@ fun DailySpendingChart(
         purchases
             .groupBy { it.date }
             .map { (date, items) -> date to items.sumOf { it.amount } }
-            .sortedByDescending { it.second }
-            .take(7)
             .sortedBy { it.first }
+            .takeLast(7)
     }
 
     if (dailyData.isEmpty()) return
 
     val maxAmount = dailyData.maxOf { it.second }
+    val minAmount = dailyData.minOf { it.second }
+    val lineColor = MaterialTheme.colorScheme.primary
+    val gridColor = MaterialTheme.colorScheme.outlineVariant
+    val pointColor = MaterialTheme.colorScheme.primary
+    val fillColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
 
     var animationPlayed by remember { mutableStateOf(false) }
     val animationProgress by animateFloatAsState(
         targetValue = if (animationPlayed) 1f else 0f,
-        animationSpec = tween(durationMillis = 600),
-        label = "bars"
+        animationSpec = tween(durationMillis = 800),
+        label = "line"
     )
     LaunchedEffect(Unit) { animationPlayed = true }
 
@@ -233,47 +238,110 @@ fun DailySpendingChart(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
 
-            dailyData.forEach { (date, amount) ->
-                val fraction = if (maxAmount > 0) (amount / maxAmount).toFloat() else 0f
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Data (só dia/mês)
+            // Valores máx e mín
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Máx: ${Formatters.currency(maxAmount)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Mín: ${Formatters.currency(minAmount)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+
+            // Gráfico de linha via Canvas
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+            ) {
+                val chartWidth = size.width
+                val chartHeight = size.height
+                val padding = 8.dp.toPx()
+                val drawWidth = chartWidth - padding * 2
+                val drawHeight = chartHeight - padding * 2
+                val range = if (maxAmount - minAmount > 0) maxAmount - minAmount else 1.0
+
+                // Linhas de grade horizontais
+                for (i in 0..3) {
+                    val y = padding + drawHeight * (i / 3f)
+                    drawLine(
+                        color = gridColor,
+                        start = Offset(padding, y),
+                        end = Offset(chartWidth - padding, y),
+                        strokeWidth = 1f
+                    )
+                }
+
+                // Calcular pontos
+                val points = dailyData.mapIndexed { index, (_, amount) ->
+                    val x = padding + (drawWidth * index / (dailyData.size - 1).coerceAtLeast(1))
+                    val yNormalized = ((amount - minAmount) / range).toFloat()
+                    val y = padding + drawHeight * (1f - yNormalized)
+                    Offset(x, y)
+                }
+
+                // Área preenchida abaixo da linha (com animação)
+                val animatedPoints = points.map { point ->
+                    val animY = padding + drawHeight + (point.y - padding - drawHeight) * animationProgress
+                    Offset(point.x, animY)
+                }
+
+                val path = Path().apply {
+                    moveTo(animatedPoints.first().x, padding + drawHeight)
+                    animatedPoints.forEach { lineTo(it.x, it.y) }
+                    lineTo(animatedPoints.last().x, padding + drawHeight)
+                    close()
+                }
+                drawPath(path, fillColor)
+
+                // Linha principal
+                for (i in 0 until animatedPoints.size - 1) {
+                    drawLine(
+                        color = lineColor,
+                        start = animatedPoints[i],
+                        end = animatedPoints[i + 1],
+                        strokeWidth = 3.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                }
+
+                // Pontos (círculos)
+                animatedPoints.forEach { point ->
+                    drawCircle(
+                        color = pointColor,
+                        radius = 5.dp.toPx(),
+                        center = point
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        radius = 3.dp.toPx(),
+                        center = point
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+
+            // Labels de data no eixo X
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                dailyData.forEach { (date, _) ->
                     Text(
                         text = date.take(5),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.width(44.dp)
-                    )
-                    // Barra
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(20.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(fraction * animationProgress)
-                                .height(20.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.primary)
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    // Valor
-                    Text(
-                        text = Formatters.currency(amount),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.width(72.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
