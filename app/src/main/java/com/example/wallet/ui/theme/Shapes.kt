@@ -4,13 +4,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
-// Baseado em --radius: 0.75rem = 12dp
-// sm = radius - 4 = 8dp, md = radius - 2 = 10dp, lg = 12dp, xl = radius + 4 = 16dp
+/**
+ * Shapes modernos do Design System — cantos arredondados generosos (12–20dp)
+ * para visual premium e fluido inspirado em Nubank/Google Wallet.
+ */
 val Shapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small      = RoundedCornerShape(8.dp),   // --radius-sm
-    medium     = RoundedCornerShape(10.dp),  // --radius-md
-    large      = RoundedCornerShape(12.dp),  // --radius-lg (default)
-    extraLarge = RoundedCornerShape(16.dp)   // --radius-xl
+    extraSmall = RoundedCornerShape(8.dp),
+    small      = RoundedCornerShape(12.dp),
+    medium     = RoundedCornerShape(16.dp),
+    large      = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(28.dp)
 )
-

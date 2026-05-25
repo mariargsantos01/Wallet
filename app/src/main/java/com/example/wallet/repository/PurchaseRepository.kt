@@ -14,4 +14,7 @@ interface PurchaseRepository {
     suspend fun addPurchase(purchase: PurchaseModel, cardId: Long? = null)
     suspend fun deletePurchase(id: Long)
     suspend fun clearHistory()
+
+    /** Soma total de compras do cartão. */
+    suspend fun getTotalByCard(cardId: Long): Double
 }

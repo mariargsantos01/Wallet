@@ -9,14 +9,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,25 +29,27 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wallet.ui.components.AppTextField
 import com.example.wallet.ui.components.PrimaryButton
 import com.example.wallet.ui.components.TopBar
-import com.example.wallet.viewmodel.CreateCardViewModel
+import com.example.wallet.viewmodel.EditProfileViewModel
 
 @Composable
-fun CreateCardScreen(
-    onCardCreated: () -> Unit,
-    showBackButton: Boolean = false,
-    onBack: () -> Unit = {},
-    viewModel: CreateCardViewModel = viewModel()
+fun EditProfileScreen(
+    onBack: () -> Unit,
+    viewModel: EditProfileViewModel = viewModel()
 ) {
-    val form by viewModel.form.collectAsStateWithLifecycle()
+    val displayName by viewModel.displayName.collectAsStateWithLifecycle()
+    val email by viewModel.email.collectAsStateWithLifecycle()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.data) {
+        if (state.data != null) {
+            snackbarHostState.showSnackbar("Perfil atualizado com sucesso")
+        }
+    }
 
     Scaffold(
-        topBar = {
-            TopBar(
-                title = "Criar Cartão",
-                onBack = if (showBackButton) onBack else null
-            )
-        },
+        topBar = { TopBar(title = "Editar Perfil", onBack = onBack) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
@@ -55,46 +62,32 @@ fun CreateCardScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "Crie seu primeiro cartão Wallet",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(Modifier.height(8.dp))
 
                 AppTextField(
-                    value = form.name,
-                    onValueChange = viewModel::onNameChange,
-                    label = "Nome impresso no cartão",
-                    placeholder = "Ex.: João da Silva"
+                    value = displayName,
+                    onValueChange = viewModel::onDisplayNameChange,
+                    label = "Nome",
+                    placeholder = "Seu nome completo",
+                    leadingIcon = Icons.Default.Person
                 )
 
                 AppTextField(
-                    value = form.cardType,
-                    onValueChange = viewModel::onCardTypeChange,
-                    label = "Tipo",
-                    placeholder = "Black, Gold, Basic"
+                    value = email,
+                    onValueChange = viewModel::onEmailChange,
+                    label = "Email",
+                    placeholder = "seu@email.com",
+                    leadingIcon = Icons.Default.Email,
+                    keyboardType = KeyboardType.Email
                 )
 
-                AppTextField(
-                    value = form.limit,
-                    onValueChange = viewModel::onLimitChange,
-                    label = "Limite desejado (R$)",
-                    placeholder = "0,00",
-                    keyboardType = KeyboardType.Number
-                )
-
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
 
                 PrimaryButton(
-                    text = if (state.isLoading) "Criando..." else "Criar cartão",
-                    onClick = { viewModel.submit(onCardCreated) },
+                    text = if (state.isLoading) "Salvando..." else "Salvar Alterações",
+                    onClick = viewModel::save,
                     loading = state.isLoading
                 )
 
@@ -109,3 +102,4 @@ fun CreateCardScreen(
         }
     }
 }
+

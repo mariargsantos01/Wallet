@@ -128,9 +128,14 @@ fun SelectBankModal(
                     ConnectingStep {
                         val bank = selectedBank!!
                         coroutineScope.launch {
-                            ServiceLocator.bankRepository.connect(bank.name)
-                            selectedBank = bank.copy(isConnected = true)
-                            currentStep = ModalStep.BANK_CONNECTED_SUCCESS
+                            try {
+                                ServiceLocator.bankRepository.connect(bank.name)
+                                selectedBank = bank.copy(isConnected = true)
+                                currentStep = ModalStep.BANK_CONNECTED_SUCCESS
+                            } catch (_: Exception) {
+                                // FK violation ou outro erro — volta para seleção
+                                currentStep = ModalStep.SELECT_BANK
+                            }
                         }
                     }
                 }
@@ -171,13 +176,19 @@ fun SelectBankModal(
                             val newCard = CardModel(
                                 name = finalName,
                                 lastDigits = Random.nextInt(1000, 9999).toString(),
-                                limit = limitValue
+                                limit = limitValue,
+                                brand = selectedBrand ?: "Visa",
+                                bankColor = selectedBank?.color?.value?.toLong() ?: 0xFF171717,
+                                bankName = selectedBank?.name ?: ""
                             )
                             coroutineScope.launch {
-                                val generatedId = ServiceLocator.cardRepository.addCard(newCard)
-                                // armazena o id para a tela de sucesso repassar
-                                createdCardId = generatedId
-                                currentStep = ModalStep.CARD_CREATED_SUCCESS
+                                try {
+                                    val generatedId = ServiceLocator.cardRepository.addCard(newCard)
+                                    createdCardId = generatedId
+                                    currentStep = ModalStep.CARD_CREATED_SUCCESS
+                                } catch (_: Exception) {
+                                    onDismiss()
+                                }
                             }
                         },
                         onDismiss = onDismiss
@@ -227,7 +238,7 @@ private fun BankListStep(
                         TextButton(onClick = onDisconnectAll) {
                             Text(
                                 "Desconectar todos",
-                                color = Color(0xFFFF5252),
+                                color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -266,9 +277,9 @@ private fun ConnectBankStep(
     ) {
         HeaderSection("Conectar Banco", onDismiss)
         Spacer(Modifier.height(24.dp))
-        BankLogoLarge(bank.color)
+        BankLogoLarge(bank.name)
         Spacer(Modifier.height(24.dp))
-        Text("Conectar ao ${bank.name}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+        Text("Conectar ao ${bank.name}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Text(
             "Autorize o acesso para gerar cartões virtuais deste banco",
             style = MaterialTheme.typography.bodyMedium,
@@ -300,9 +311,9 @@ private fun ConnectingStep(onFinished: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator(color = Color(0xFF00A3E1), strokeWidth = 3.dp)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 3.dp)
         Spacer(Modifier.height(24.dp))
-        Text("Conectando ao banco...", style = MaterialTheme.typography.titleMedium, color = Color.White)
+        Text("Conectando ao banco...", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
         Text("Isso levará apenas alguns segundos", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -321,7 +332,7 @@ private fun BankConnectedSuccessStep(
         Spacer(Modifier.height(24.dp))
         Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF00C853), modifier = Modifier.size(80.dp))
         Spacer(Modifier.height(24.dp))
-        Text("Conectado com Sucesso!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+        Text("Conectado com Sucesso!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Text(
             "O ${bank.name} foi conectado a sua conta. Agora você pode criar cartões virtuais deste banco.",
             style = MaterialTheme.typography.bodyMedium,
@@ -351,9 +362,9 @@ private fun SelectBrandStep(
     ) {
         HeaderSection("Escolha a Bandeira", onDismiss)
         Spacer(Modifier.height(24.dp))
-        BankLogoLarge(bank.color)
+        BankLogoLarge(bank.name)
         Spacer(Modifier.height(16.dp))
-        Text(bank.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+        Text(bank.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Text("Selecione a bandeira do seu cartão", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(32.dp))
         LazyVerticalGrid(
@@ -429,8 +440,8 @@ private fun CreateCardFormStep(
             onClick = onCreate,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             enabled = isFormValid,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A3E1))
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text("Criar Cartão", fontWeight = FontWeight.Bold)
         }
@@ -452,7 +463,7 @@ private fun CardCreatedSuccessStep(
         Spacer(Modifier.height(24.dp))
         Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF00C853), modifier = Modifier.size(80.dp))
         Spacer(Modifier.height(24.dp))
-        Text("Cartão Criado!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+        Text("Cartão Criado!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Text(
             text = if (cardName.isBlank()) "Seu novo cartão $bankName foi adicionado com sucesso" 
                   else "O cartão \"$cardName\" do $bankName foi adicionado com sucesso",
@@ -477,8 +488,8 @@ private fun HeaderSection(title: String, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun BankLogoLarge(color: Color) {
-    Box(modifier = Modifier.size(80.dp).clip(CircleShape).background(color))
+private fun BankLogoLarge(bankName: String) {
+    BankLogo(bankName = bankName, size = 80.dp)
 }
 
 @Composable
@@ -493,26 +504,26 @@ private fun BrandsBadgeRow(networks: List<String>) {
 
 @Composable
 private fun InfoRow(icon: ImageVector, text: String) {
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+    Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = Color(0xFF00A3E1), modifier = Modifier.size(24.dp))
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(16.dp))
-            Text(text, style = MaterialTheme.typography.bodyMedium, color = Color.White, fontWeight = FontWeight.Medium)
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
         }
     }
 }
 
 @Composable
 private fun PrimaryButtonFull(text: String, onClick: () -> Unit) {
-    Button(onClick = onClick, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A3E1))) {
+    Button(onClick = onClick, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
         Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
 private fun SecondaryButtonFull(text: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFF00A3E1))) {
-        Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFF00A3E1))
+    OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)) {
+        Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -522,7 +533,7 @@ private fun BrandItemCard(network: String, onClick: () -> Unit) {
         Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(modifier = Modifier.height(32.dp), contentAlignment = Alignment.Center) { NetworkBadge(network, isLarge = true) }
             Spacer(Modifier.height(12.dp))
-            Text(network, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color.White)
+            Text(network, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -541,10 +552,10 @@ private fun BankItem(
     Surface(onClick = onClick, color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(bank.color))
+                BankLogo(bankName = bank.name, size = 40.dp)
                 Spacer(Modifier.width(16.dp))
                 Column {
-                    Text(bank.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(bank.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { bank.networks.forEach { NetworkBadge(it) } }
                 }
             }
@@ -559,7 +570,7 @@ private fun BankItem(
                             Icon(
                                 Icons.Default.LinkOff,
                                 contentDescription = "Desconectar ${bank.name}",
-                                tint = Color(0xFFFF5252),
+                                tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.size(20.dp)
                             )
                         }

@@ -29,7 +29,7 @@ import com.example.wallet.data.local.entity.PurchaseEntity
         BankAccountEntity::class,
         BankConnectionEntity::class
     ],
-    version = 4,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

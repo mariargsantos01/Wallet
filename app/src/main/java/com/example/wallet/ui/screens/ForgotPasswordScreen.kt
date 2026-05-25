@@ -38,7 +38,7 @@ fun ForgotPasswordScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -66,7 +66,7 @@ fun ForgotPasswordScreen(
             keyboardType = KeyboardType.Email
         )
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(32.dp))
 
         PrimaryButton(
             text = if (state.isLoading) "Enviando..." else "Enviar Link",
@@ -75,7 +75,7 @@ fun ForgotPasswordScreen(
         )
 
         state.error?.let {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
@@ -83,14 +83,14 @@ fun ForgotPasswordScreen(
             )
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(28.dp))
 
         Text(
             text = "Voltar para o Login",
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.clickable { onBackToLogin() }
         )
     }
 }
-

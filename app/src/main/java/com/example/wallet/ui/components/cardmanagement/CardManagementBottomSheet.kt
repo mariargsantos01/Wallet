@@ -166,14 +166,16 @@ fun CardManagementBottomSheet(
                     // 2. Card Preview
                     item {
                         CardPreview(
-                            brand = "Visa",
+                            brand = card.brand,
                             maskedNumber = if (state.showData) {
                                 "4532 1234 5678 ${card.lastDigits}"
                             } else {
                                 "•••• •••• •••• ${card.lastDigits}"
                             },
                             holderName = card.name,
-                            expiry = "12/28"
+                            expiry = card.expiry,
+                            bankColor = card.bankColor,
+                            bankName = card.bankName
                         )
                     }
 

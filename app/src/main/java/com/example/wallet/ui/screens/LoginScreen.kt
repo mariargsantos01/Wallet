@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Lock
@@ -50,15 +52,19 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 24.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Spacer(Modifier.height(48.dp))
+
+        // Logo / ícone
         Box(
             modifier = Modifier
-                .size(64.dp)
+                .size(72.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primaryContainer,
                     shape = MaterialTheme.shapes.large
                 ),
             contentAlignment = Alignment.Center
@@ -67,11 +73,11 @@ fun LoginScreen(
                 imageVector = Icons.Default.Lock,
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.onPrimary
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(32.dp))
 
         Text(
             text = "Bem-vindo",
@@ -107,7 +113,7 @@ fun LoginScreen(
             leadingIcon = Icons.Default.Lock
         )
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(32.dp))
 
         PrimaryButton(
             text = if (state.isLoading) "Entrando..." else "Entrar",
@@ -116,7 +122,7 @@ fun LoginScreen(
         )
 
         state.error?.let {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
@@ -124,7 +130,7 @@ fun LoginScreen(
             )
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         LinkButton(
             text = "Esqueci minha senha",
@@ -132,7 +138,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(32.dp))
 
         val signUpText = buildAnnotatedString {
             withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
@@ -141,7 +147,7 @@ fun LoginScreen(
             withStyle(
                 SpanStyle(
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
             ) {
                 append("Cadastre-se")
@@ -152,6 +158,7 @@ fun LoginScreen(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.clickable { onNavigateToSignUp() }
         )
+
+        Spacer(Modifier.height(48.dp))
     }
 }
-

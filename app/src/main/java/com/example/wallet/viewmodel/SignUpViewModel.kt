@@ -29,6 +29,9 @@ class SignUpViewModel(
     private val _password = MutableStateFlow("")
     val password: StateFlow<String> = _password.asStateFlow()
 
+    private val _confirmPassword = MutableStateFlow("")
+    val confirmPassword: StateFlow<String> = _confirmPassword.asStateFlow()
+
     private val _uiState = MutableStateFlow(UiState<Unit>())
     val uiState: StateFlow<UiState<Unit>> = _uiState.asStateFlow()
 
@@ -36,8 +39,31 @@ class SignUpViewModel(
     fun onUsernameChange(value: String) { _username.value = value }
     fun onEmailChange(value: String) { _email.value = value }
     fun onPasswordChange(value: String) { _password.value = value }
+    fun onConfirmPasswordChange(value: String) { _confirmPassword.value = value }
 
     fun signUp(onSuccess: () -> Unit) {
+        // Validações
+        if (_fullName.value.trim().isBlank()) {
+            _uiState.value = UiState(error = "Informe seu nome completo")
+            return
+        }
+        if (_username.value.trim().isBlank()) {
+            _uiState.value = UiState(error = "Informe um nome de usuário")
+            return
+        }
+        if (_email.value.trim().isBlank() || !_email.value.contains("@")) {
+            _uiState.value = UiState(error = "Informe um email válido")
+            return
+        }
+        if (_password.value.length < 6) {
+            _uiState.value = UiState(error = "A senha deve ter no mínimo 6 caracteres")
+            return
+        }
+        if (_password.value != _confirmPassword.value) {
+            _uiState.value = UiState(error = "As senhas não coincidem")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = UiState(isLoading = true)
             try {

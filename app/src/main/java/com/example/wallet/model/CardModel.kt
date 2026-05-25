@@ -10,5 +10,7 @@ data class CardModel(
     val dayLimit: Double = 5000.0,
     val nightLimit: Double = 2000.0,
     val brand: String = "Visa",
-    val expiry: String = "12/28"
+    val expiry: String = "12/28",
+    val bankColor: Long = 0xFF171717,
+    val bankName: String = ""
 )

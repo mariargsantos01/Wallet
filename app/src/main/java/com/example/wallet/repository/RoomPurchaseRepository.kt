@@ -45,7 +45,8 @@ class RoomPurchaseRepository(
                 cardId = cardId,
                 title = purchase.title,
                 amount = purchase.amount,
-                date = purchase.date
+                date = purchase.date,
+                category = purchase.category.name
             )
         )
     }
@@ -57,5 +58,9 @@ class RoomPurchaseRepository(
     override suspend fun clearHistory() {
         val accountId = sessionManager.getCurrentUserId() ?: return
         purchaseDao.clearByAccount(accountId)
+    }
+
+    override suspend fun getTotalByCard(cardId: Long): Double {
+        return purchaseDao.sumByCard(cardId)
     }
 }

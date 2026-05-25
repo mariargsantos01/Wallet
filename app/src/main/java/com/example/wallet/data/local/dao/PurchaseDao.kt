@@ -25,6 +25,12 @@ interface PurchaseDao {
     @Query("SELECT COUNT(*) FROM purchases")
     suspend fun count(): Int
 
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM purchases WHERE cardId = :cardId")
+    suspend fun sumByCard(cardId: Long): Double
+
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM purchases WHERE accountId = :accountId")
+    suspend fun sumByAccount(accountId: Long): Double
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(purchase: PurchaseEntity): Long
 

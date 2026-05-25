@@ -20,7 +20,11 @@ class MyCardsViewModel(
     private val _uiState = MutableStateFlow(UiState<List<CardModel>>())
     val uiState: StateFlow<UiState<List<CardModel>>> = _uiState.asStateFlow()
 
-    init { observe() }
+    init {
+        observe()
+        // Garante que compras de exemplo sejam inseridas se houver cartões
+        ServiceLocator.trySeedPurchases()
+    }
 
     private fun observe() {
         viewModelScope.launch {

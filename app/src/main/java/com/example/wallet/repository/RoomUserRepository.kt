@@ -127,14 +127,14 @@ class RoomUserRepository(
 
         // Compras mockadas associadas ao cartão
         val purchases = listOf(
-            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Supermercado Extra", amount = 287.45, date = "20/05/2026"),
-            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Netflix", amount = 55.90, date = "18/05/2026"),
-            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Posto Shell", amount = 220.00, date = "15/05/2026"),
-            PurchaseEntity(accountId = accountId, cardId = cardId, title = "iFood", amount = 67.80, date = "14/05/2026"),
-            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Amazon", amount = 349.90, date = "12/05/2026"),
-            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Farmácia Drogasil", amount = 98.50, date = "10/05/2026"),
-            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Uber", amount = 32.70, date = "08/05/2026"),
-            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Padaria Real", amount = 18.90, date = "07/05/2026")
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Supermercado Extra", amount = 287.45, date = "20/05/2026", category = "FOOD"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Netflix", amount = 55.90, date = "18/05/2026", category = "SUBSCRIPTION"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Posto Shell", amount = 220.00, date = "15/05/2026", category = "TRANSPORT"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "iFood", amount = 67.80, date = "14/05/2026", category = "FOOD"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Amazon", amount = 349.90, date = "12/05/2026", category = "SHOPPING"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Farmácia Drogasil", amount = 98.50, date = "10/05/2026", category = "HEALTH"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Uber", amount = 32.70, date = "08/05/2026", category = "TRANSPORT"),
+            PurchaseEntity(accountId = accountId, cardId = cardId, title = "Padaria Real", amount = 18.90, date = "07/05/2026", category = "FOOD")
         )
         pDao.insertAll(purchases)
     }

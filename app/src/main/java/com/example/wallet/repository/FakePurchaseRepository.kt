@@ -31,4 +31,8 @@ class FakePurchaseRepository : PurchaseRepository {
     override suspend fun clearHistory() {
         _items.value = emptyList()
     }
+
+    override suspend fun getTotalByCard(cardId: Long): Double {
+        return _items.value.sumOf { it.amount }
+    }
 }

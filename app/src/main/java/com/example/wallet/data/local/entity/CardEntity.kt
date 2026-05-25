@@ -37,6 +37,8 @@ data class CardEntity(
     val nightLimit: Double = 2000.0,
     val brand: String = "Visa",
     val expiry: String = "12/28",
+    val bankColor: Long = 0xFF171717,
+    val bankName: String = "",
     val createdAt: Long = System.currentTimeMillis()
 ) {
     fun toModel(): CardModel = CardModel(
@@ -49,7 +51,9 @@ data class CardEntity(
         dayLimit = dayLimit,
         nightLimit = nightLimit,
         brand = brand,
-        expiry = expiry
+        expiry = expiry,
+        bankColor = bankColor,
+        bankName = bankName
     )
 
     companion object {
@@ -64,7 +68,9 @@ data class CardEntity(
             dayLimit = model.dayLimit,
             nightLimit = model.nightLimit,
             brand = model.brand,
-            expiry = model.expiry
+            expiry = model.expiry,
+            bankColor = model.bankColor,
+            bankName = model.bankName
         )
     }
 }
