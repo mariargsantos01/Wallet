@@ -1,6 +1,7 @@
 package com.example.wallet.ui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,9 +11,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,6 +32,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -79,133 +84,147 @@ fun SelectBankModal(
     val otherBanks = banks.filter { !it.isConnected }
 
     val coroutineScope = rememberCoroutineScope()
+    val configuration = LocalConfiguration.current
+    // Define o limite de altura em 80% da tela para o modal
+    val maxHeight = (configuration.screenHeightDp * 0.8f).dp
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface,
         dragHandle = { BottomSheetDefaults.DragHandle(color = Color.Gray.copy(alpha = 0.5f)) }
     ) {
-        AnimatedContent(
-            targetState = currentStep,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
-            },
-            label = "ModalStepTransition"
-        ) { step ->
-            when (step) {
-                ModalStep.SELECT_BANK -> {
-                    BankListStep(
-                        connectedBanks = connectedBanks,
-                        otherBanks = otherBanks,
-                        onBankClick = { bank ->
-                            selectedBank = bank
-                            currentStep = if (bank.isConnected) ModalStep.SELECT_BRAND else ModalStep.CONNECT_BANK
-                        },
-                        onDisconnectBank = { bank ->
-                            coroutineScope.launch {
-                                ServiceLocator.bankRepository.disconnect(bank.name)
-                            }
-                        },
-                        onDisconnectAll = {
-                            coroutineScope.launch {
-                                ServiceLocator.bankRepository.disconnectAll()
-                            }
-                        },
-                        onDismiss = onDismiss
-                    )
-                }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = maxHeight)
+                .animateContentSize()
+        ) {
+            AnimatedContent(
+                targetState = currentStep,
+                modifier = Modifier.fillMaxWidth(),
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                },
+                label = "ModalStepTransition",
+                contentAlignment = Alignment.TopCenter
+            ) { step ->
+                when (step) {
+                    ModalStep.SELECT_BANK -> {
+                        BankListStep(
+                            connectedBanks = connectedBanks,
+                            otherBanks = otherBanks,
+                            onBankClick = { bank ->
+                                selectedBank = bank
+                                currentStep = if (bank.isConnected) ModalStep.SELECT_BRAND else ModalStep.CONNECT_BANK
+                            },
+                            onDisconnectBank = { bank ->
+                                coroutineScope.launch {
+                                    ServiceLocator.bankRepository.disconnect(bank.name)
+                                }
+                            },
+                            onDisconnectAll = {
+                                coroutineScope.launch {
+                                    ServiceLocator.bankRepository.disconnectAll()
+                                }
+                            },
+                            onDismiss = onDismiss
+                        )
+                    }
 
-                ModalStep.CONNECT_BANK -> {
-                    ConnectBankStep(
-                        bank = selectedBank!!,
-                        onConnect = { currentStep = ModalStep.CONNECTING },
-                        onBack = { currentStep = ModalStep.SELECT_BANK },
-                        onDismiss = onDismiss
-                    )
-                }
+                    ModalStep.CONNECT_BANK -> {
+                        ConnectBankStep(
+                            bank = selectedBank!!,
+                            onConnect = { currentStep = ModalStep.CONNECTING },
+                            onBack = { currentStep = ModalStep.SELECT_BANK },
+                            onDismiss = onDismiss
+                        )
+                    }
 
-                ModalStep.CONNECTING -> {
-                    ConnectingStep {
-                        val bank = selectedBank!!
-                        coroutineScope.launch {
-                            try {
-                                ServiceLocator.bankRepository.connect(bank.name)
-                                selectedBank = bank.copy(isConnected = true)
-                                currentStep = ModalStep.BANK_CONNECTED_SUCCESS
-                            } catch (_: Exception) {
-                                // FK violation ou outro erro — volta para seleção
-                                currentStep = ModalStep.SELECT_BANK
+                    ModalStep.CONNECTING -> {
+                        ConnectingStep {
+                            val bank = selectedBank!!
+                            coroutineScope.launch {
+                                try {
+                                    ServiceLocator.bankRepository.connect(bank.name)
+                                    selectedBank = bank.copy(isConnected = true)
+                                    currentStep = ModalStep.BANK_CONNECTED_SUCCESS
+                                } catch (_: Exception) {
+                                    // FK violation ou outro erro — volta para seleção
+                                    currentStep = ModalStep.SELECT_BANK
+                                }
                             }
                         }
                     }
-                }
 
-                ModalStep.BANK_CONNECTED_SUCCESS -> {
-                    BankConnectedSuccessStep(
-                        bank = selectedBank!!,
-                        onCreateCard = { currentStep = ModalStep.SELECT_BRAND },
-                        onDismiss = onDismiss
-                    )
-                }
+                    ModalStep.BANK_CONNECTED_SUCCESS -> {
+                        BankConnectedSuccessStep(
+                            bank = selectedBank!!,
+                            onCreateCard = { currentStep = ModalStep.SELECT_BRAND },
+                            onDismiss = onDismiss
+                        )
+                    }
 
-                ModalStep.SELECT_BRAND -> {
-                    SelectBrandStep(
-                        bank = selectedBank!!,
-                        onBrandSelected = { brand ->
-                            selectedBrand = brand
-                            currentStep = ModalStep.CREATE_CARD_FORM
-                        },
-                        onBack = { currentStep = ModalStep.SELECT_BANK },
-                        onDismiss = onDismiss
-                    )
-                }
+                    ModalStep.SELECT_BRAND -> {
+                        SelectBrandStep(
+                            bank = selectedBank!!,
+                            onBrandSelected = { brand ->
+                                selectedBrand = brand
+                                currentStep = ModalStep.CREATE_CARD_FORM
+                            },
+                            onBack = { currentStep = ModalStep.SELECT_BANK },
+                            onDismiss = onDismiss
+                        )
+                    }
 
-                ModalStep.CREATE_CARD_FORM -> {
-                    CreateCardFormStep(
-                        bank = selectedBank!!,
-                        brand = selectedBrand ?: "",
-                        name = cardName,
-                        onNameChange = { cardName = it },
-                        type = cardType,
-                        onTypeChange = { cardType = it },
-                        limit = cardLimit,
-                        onLimitChange = { cardLimit = it },
-                        onCreate = {
-                            val limitValue = cardLimit.toDoubleOrNull() ?: 0.0
-                            val finalName = if (cardName.isBlank()) "${selectedBank?.name} $selectedBrand" else cardName
-                            val newCard = CardModel(
-                                name = finalName,
-                                lastDigits = Random.nextInt(1000, 9999).toString(),
-                                limit = limitValue,
-                                brand = selectedBrand ?: "Visa",
-                                bankColor = selectedBank?.color?.value?.toLong() ?: 0xFF171717,
-                                bankName = selectedBank?.name ?: ""
-                            )
-                            coroutineScope.launch {
-                                try {
-                                    val generatedId = ServiceLocator.cardRepository.addCard(newCard)
-                                    createdCardId = generatedId
-                                    currentStep = ModalStep.CARD_CREATED_SUCCESS
-                                } catch (_: Exception) {
-                                    onDismiss()
+                    ModalStep.CREATE_CARD_FORM -> {
+                        CreateCardFormStep(
+                            bank = selectedBank!!,
+                            brand = selectedBrand ?: "",
+                            name = cardName,
+                            onNameChange = { cardName = it },
+                            type = cardType,
+                            onTypeChange = { cardType = it },
+                            limit = cardLimit,
+                            onLimitChange = { cardLimit = it },
+                            onCreate = {
+                                val limitValue = cardLimit.toDoubleOrNull() ?: 0.0
+                                val finalName = if (cardName.isBlank()) "${selectedBank?.name} $selectedBrand" else cardName
+                                val newCard = CardModel(
+                                    name = finalName,
+                                    lastDigits = Random.nextInt(1000, 9999).toString(),
+                                    limit = limitValue,
+                                    brand = selectedBrand ?: "Visa",
+                                    bankColor = selectedBank?.color?.value?.toLong() ?: 0xFF171717,
+                                    bankName = selectedBank?.name ?: ""
+                                )
+                                coroutineScope.launch {
+                                    try {
+                                        val generatedId = ServiceLocator.cardRepository.addCard(newCard)
+                                        createdCardId = generatedId
+                                        currentStep = ModalStep.CARD_CREATED_SUCCESS
+                                    } catch (_: Exception) {
+                                        onDismiss()
+                                    }
                                 }
-                            }
-                        },
-                        onDismiss = onDismiss
-                    )
-                }
+                            },
+                            onDismiss = onDismiss
+                        )
+                    }
 
-                ModalStep.CARD_CREATED_SUCCESS -> {
-                    CardCreatedSuccessStep(
-                        bankName = selectedBank?.name ?: "",
-                        cardName = cardName,
-                        onFinish = {
-                            // repassa o id do cartão criado para o chamador
-                            createdCardId?.let { onCardCreated(it) }
-                            onDismiss()
-                        },
-                        onDismiss = onDismiss
-                    )
+                    ModalStep.CARD_CREATED_SUCCESS -> {
+                        CardCreatedSuccessStep(
+                            bankName = selectedBank?.name ?: "",
+                            cardName = cardName,
+                            onFinish = {
+                                // repassa o id do cartão criado para o chamador
+                                createdCardId?.let { onCardCreated(it) }
+                                onDismiss()
+                            },
+                            onDismiss = onDismiss
+                        )
+                    }
                 }
             }
         }
@@ -223,43 +242,48 @@ private fun BankListStep(
     onDisconnectAll: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
-        HeaderSection("Selecione o Banco", onDismiss)
-        Spacer(Modifier.height(16.dp))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            if (connectedBanks.isNotEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        SectionTitle("Bancos Conectados")
-                        TextButton(onClick = onDisconnectAll) {
-                            Text(
-                                "Desconectar todos",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            HeaderSection("Selecione o Banco", onDismiss)
+        }
+        if (connectedBanks.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SectionTitle("Bancos Conectados")
+                    TextButton(onClick = onDisconnectAll) {
+                        Text(
+                            "Desconectar todos",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
-                items(connectedBanks) { item ->
-                    BankItem(
-                        bank = item,
-                        onClick = { onBankClick(item) },
-                        onDisconnect = { onDisconnectBank(item) }
-                    )
-                }
             }
-            item {
-                Spacer(Modifier.height(8.dp))
-                SectionTitle("Conectar Outro Banco")
+            items(connectedBanks) { item ->
+                BankItem(
+                    bank = item,
+                    onClick = { onBankClick(item) },
+                    onDisconnect = { onDisconnectBank(item) }
+                )
             }
-            items(otherBanks) { item ->
-                BankItem(bank = item, onClick = { onBankClick(item) }, onDisconnect = null)
-            }
+        }
+        item {
+            Spacer(Modifier.height(8.dp))
+            SectionTitle("Conectar Outro Banco")
+        }
+        items(otherBanks) { item ->
+            BankItem(bank = item, onClick = { onBankClick(item) }, onDisconnect = null)
         }
     }
 }
@@ -272,7 +296,11 @@ private fun ConnectBankStep(
     onDismiss: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 32.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HeaderSection("Conectar Banco", onDismiss)
@@ -307,7 +335,10 @@ private fun ConnectingStep(onFinished: () -> Unit) {
         onFinished()
     }
     Column(
-        modifier = Modifier.fillMaxWidth().padding(60.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(60.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -325,7 +356,11 @@ private fun BankConnectedSuccessStep(
     onDismiss: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 32.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HeaderSection("Banco Conectado", onDismiss)
@@ -356,29 +391,47 @@ private fun SelectBrandStep(
     onBack: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    // Usamos LazyVerticalGrid para permitir rolagem interna e layout em grade que respeita o limite de altura do modal
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 32.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        HeaderSection("Escolha a Bandeira", onDismiss)
-        Spacer(Modifier.height(24.dp))
-        BankLogoLarge(bank.name)
-        Spacer(Modifier.height(16.dp))
-        Text(bank.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-        Text("Selecione a bandeira do seu cartão", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(32.dp))
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.heightIn(max = 280.dp)
-        ) {
-            items(bank.networks) { network ->
-                BrandItemCard(network) { onBrandSelected(network) }
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                HeaderSection("Escolha a Bandeira", onDismiss)
+                Spacer(Modifier.height(24.dp))
+                BankLogoLarge(bank.name)
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    bank.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    "Selecione a bandeira do seu cartão",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(32.dp))
             }
         }
-        Spacer(Modifier.height(40.dp))
-        TextButton(onClick = onBack) { Text("Voltar", color = MaterialTheme.colorScheme.primary) }
+
+        items(bank.networks) { network ->
+            BrandItemCard(network) { onBrandSelected(network) }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(Modifier.height(24.dp))
+                TextButton(onClick = onBack) { Text("Voltar", color = MaterialTheme.colorScheme.primary) }
+            }
+        }
     }
 }
 
@@ -397,7 +450,13 @@ private fun CreateCardFormStep(
 ) {
     val isFormValid = name.isNotBlank() && limit.isNotBlank()
 
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 32.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         HeaderSection("Criar Cartão Virtual", onDismiss)
         Spacer(Modifier.height(24.dp))
         
@@ -456,7 +515,11 @@ private fun CardCreatedSuccessStep(
     onDismiss: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 32.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         HeaderSection("Cartão Criado", onDismiss)
