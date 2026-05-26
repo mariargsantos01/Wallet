@@ -11,6 +11,8 @@ data class CardModel(
     val nightLimit: Double = 2000.0,
     val brand: String = "Visa",
     val expiry: String = "12/28",
+    val isTemporary: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis(),
     val bankColor: Long = 0xFF171717,
     val bankName: String = ""
 )

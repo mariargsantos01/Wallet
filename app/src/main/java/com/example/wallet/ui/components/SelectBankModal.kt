@@ -63,21 +63,16 @@ private enum class ModalStep {
 @Composable
 fun SelectBankModal(
     onDismiss: () -> Unit,
-    // agora retorna o id do cartão criado para permitir seleção/rolagem
     onCardCreated: (Long) -> Unit
 ) {
     var currentStep by remember { mutableStateOf(ModalStep.SELECT_BANK) }
     var selectedBank by remember { mutableStateOf<BankAccount?>(null) }
     var selectedBrand by remember { mutableStateOf<String?>(null) }
-    // guarda o id do cartão criado para repassar no step de sucesso
     var createdCardId by remember { mutableStateOf<Long?>(null) }
 
-    // Estados do Formulário
     var cardName by remember { mutableStateOf("") }
-    var cardLimit by remember { mutableStateOf("") }
-    var cardType by remember { mutableStateOf("Virtual") }
+    var cardOption by remember { mutableStateOf("Multiuso") }
 
-    // Fonte de verdade reativa por usuário (Room + SessionManager).
     val banks by ServiceLocator.bankRepository.observeBanks()
         .collectAsState(initial = emptyList())
     val connectedBanks = banks.filter { it.isConnected }
@@ -85,7 +80,6 @@ fun SelectBankModal(
 
     val coroutineScope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
-    // Define o limite de altura em 80% da tela para o modal
     val maxHeight = (configuration.screenHeightDp * 0.8f).dp
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -151,7 +145,6 @@ fun SelectBankModal(
                                     selectedBank = bank.copy(isConnected = true)
                                     currentStep = ModalStep.BANK_CONNECTED_SUCCESS
                                 } catch (_: Exception) {
-                                    // FK violation ou outro erro — volta para seleção
                                     currentStep = ModalStep.SELECT_BANK
                                 }
                             }
@@ -184,12 +177,11 @@ fun SelectBankModal(
                             brand = selectedBrand ?: "",
                             name = cardName,
                             onNameChange = { cardName = it },
-                            type = cardType,
-                            onTypeChange = { cardType = it },
-                            limit = cardLimit,
-                            onLimitChange = { cardLimit = it },
+                            selectedOption = cardOption,
+                            onOptionChange = { cardOption = it },
                             onCreate = {
-                                val limitValue = cardLimit.toDoubleOrNull() ?: 0.0
+                                val isTemporary = cardOption == "24h"
+                                val limitValue = if (isTemporary) 500.0 else 5000.0
                                 val finalName = if (cardName.isBlank()) "${selectedBank?.name} $selectedBrand" else cardName
                                 val newCard = CardModel(
                                     name = finalName,
@@ -197,12 +189,27 @@ fun SelectBankModal(
                                     limit = limitValue,
                                     brand = selectedBrand ?: "Visa",
                                     bankColor = selectedBank?.color?.value?.toLong() ?: 0xFF171717,
-                                    bankName = selectedBank?.name ?: ""
+                                    bankName = selectedBank?.name ?: "",
+                                    dayLimit = limitValue,
+                                    nightLimit = limitValue * 0.4,
+                                    isTemporary = isTemporary,
+                                    // Salva o timestamp de criação para calcular expiração
+                                    createdAt = System.currentTimeMillis()
                                 )
                                 coroutineScope.launch {
                                     try {
                                         val generatedId = ServiceLocator.cardRepository.addCard(newCard)
                                         createdCardId = generatedId
+
+                                        // Se for temporário (24h), agenda cancelamento após 1 minuto
+                                        if (isTemporary) {
+                                            launch {
+                                                delay(60_000L)
+                                                // Desativa o cartão no repositório após 1 minuto
+                                                ServiceLocator.cardRepository.setActive(generatedId, false)
+                                            }
+                                        }
+
                                         currentStep = ModalStep.CARD_CREATED_SUCCESS
                                     } catch (_: Exception) {
                                         onDismiss()
@@ -217,8 +224,8 @@ fun SelectBankModal(
                         CardCreatedSuccessStep(
                             bankName = selectedBank?.name ?: "",
                             cardName = cardName,
+                            isTemporary = cardOption == "24h",
                             onFinish = {
-                                // repassa o id do cartão criado para o chamador
                                 createdCardId?.let { onCardCreated(it) }
                                 onDismiss()
                             },
@@ -391,7 +398,6 @@ private fun SelectBrandStep(
     onBack: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    // Usamos LazyVerticalGrid para permitir rolagem interna e layout em grade que respeita o limite de altura do modal
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier
@@ -407,17 +413,8 @@ private fun SelectBrandStep(
                 Spacer(Modifier.height(24.dp))
                 BankLogoLarge(bank.name)
                 Spacer(Modifier.height(16.dp))
-                Text(
-                    bank.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    "Selecione a bandeira do seu cartão",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(bank.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text("Selecione a bandeira do seu cartão", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(32.dp))
             }
         }
@@ -441,14 +438,12 @@ private fun CreateCardFormStep(
     brand: String,
     name: String,
     onNameChange: (String) -> Unit,
-    type: String,
-    onTypeChange: (String) -> Unit,
-    limit: String,
-    onLimitChange: (String) -> Unit,
+    selectedOption: String,
+    onOptionChange: (String) -> Unit,
     onCreate: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val isFormValid = name.isNotBlank() && limit.isNotBlank()
+    val isFormValid = name.isNotBlank()
 
     Column(
         modifier = Modifier
@@ -459,7 +454,7 @@ private fun CreateCardFormStep(
     ) {
         HeaderSection("Criar Cartão Virtual", onDismiss)
         Spacer(Modifier.height(24.dp))
-        
+
         OutlinedTextField(
             value = name,
             onValueChange = onNameChange,
@@ -469,32 +464,59 @@ private fun CreateCardFormStep(
             singleLine = true,
             shape = RoundedCornerShape(12.dp)
         )
-        Spacer(Modifier.height(16.dp))
-        
-        OutlinedTextField(
-            value = type,
-            onValueChange = onTypeChange,
-            label = { Text("Tipo do Cartão") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            enabled = false
-        )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
-        OutlinedTextField(
-            value = limit,
-            onValueChange = { if (it.all { char -> char.isDigit() }) onLimitChange(it) },
-            label = { Text("Limite Mensal") },
+        Text("Tipo de Cartão", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(12.dp))
+
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            prefix = { Text("R$ ", color = MaterialTheme.colorScheme.primary) },
-            shape = RoundedCornerShape(12.dp)
-        )
-        
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(
+                onClick = { onOptionChange("24h") },
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedOption == "24h") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (selectedOption == "24h") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
+                Text("24h")
+            }
+
+            Button(
+                onClick = { onOptionChange("Multiuso") },
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedOption == "Multiuso") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (selectedOption == "Multiuso") MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
+                Text("Multiuso")
+            }
+        }
+
+        // Aviso sobre expiração do cartão temporário
+        if (selectedOption == "24h") {
+            Spacer(Modifier.height(12.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "⚠️ Este cartão será cancelado automaticamente após 1 minuto.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                )
+            }
+        }
+
         Spacer(Modifier.height(40.dp))
-        
+
         Button(
             onClick = onCreate,
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -511,6 +533,7 @@ private fun CreateCardFormStep(
 private fun CardCreatedSuccessStep(
     bankName: String,
     cardName: String,
+    isTemporary: Boolean,
     onFinish: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -528,13 +551,30 @@ private fun CardCreatedSuccessStep(
         Spacer(Modifier.height(24.dp))
         Text("Cartão Criado!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         Text(
-            text = if (cardName.isBlank()) "Seu novo cartão $bankName foi adicionado com sucesso" 
-                  else "O cartão \"$cardName\" do $bankName foi adicionado com sucesso",
+            text = if (cardName.isBlank()) "Seu novo cartão $bankName foi adicionado com sucesso"
+            else "O cartão \"$cardName\" do $bankName foi adicionado com sucesso",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp).padding(horizontal = 24.dp)
         )
+        // Aviso extra na tela de sucesso para cartões temporários
+        if (isTemporary) {
+            Spacer(Modifier.height(16.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "⏱ Atenção: este cartão será cancelado automaticamente em 1 minuto.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                )
+            }
+        }
         Spacer(Modifier.height(40.dp))
         PrimaryButtonFull("Concluir") { onFinish() }
     }
