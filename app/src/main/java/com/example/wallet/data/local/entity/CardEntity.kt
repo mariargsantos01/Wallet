@@ -39,6 +39,7 @@ data class CardEntity(
     val expiry: String = "12/28",
     val bankColor: Long = 0xFF171717,
     val bankName: String = "",
+    val isTemporary: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 ) {
     fun toModel(): CardModel = CardModel(
@@ -53,7 +54,9 @@ data class CardEntity(
         brand = brand,
         expiry = expiry,
         bankColor = bankColor,
-        bankName = bankName
+        bankName = bankName,
+        isTemporary = isTemporary,
+        createdAt = createdAt
     )
 
     companion object {
@@ -70,7 +73,9 @@ data class CardEntity(
             brand = model.brand,
             expiry = model.expiry,
             bankColor = model.bankColor,
-            bankName = model.bankName
+            bankName = model.bankName,
+            isTemporary = model.isTemporary,
+            createdAt = model.createdAt
         )
     }
 }

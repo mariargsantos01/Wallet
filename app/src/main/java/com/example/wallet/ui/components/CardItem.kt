@@ -19,8 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,11 +47,9 @@ private val MastercardOrange = Color(0xFFFF9800)
 private val MastercardOverlap = Color(0xFFFF3D00)
 private val ContactlessWhite = Color(0xFFCCCCCC)
 
-/**
- * Card visual realista estilo Mastercard — chip dourado, logo,
- * contactless, número, validade e nome do titular.
- * Sombra profunda e degradê sutil.
- */
+// Duração do cartão temporário em milissegundos (1 minuto)
+private const val TEMP_CARD_DURATION_MS = 60_000L
+
 @Composable
 fun CardItem(
     card: CardModel,
@@ -59,18 +58,37 @@ fun CardItem(
 ) {
     val shape = RoundedCornerShape(16.dp)
 
-    // Cor base do banco selecionado
     val baseColor = Color(card.bankColor.toULong())
     val darkVariant = baseColor.copy(alpha = 0.7f)
 
-    // Degradê sutil no fundo do cartão baseado na cor do banco
+    // Calcula se já expirou na composição inicial
+    var isExpired by remember(card.id, card.createdAt) {
+        mutableStateOf(
+            card.isTemporary && (System.currentTimeMillis() - card.createdAt >= TEMP_CARD_DURATION_MS)
+        )
+    }
+
+    // Se for temporário e ainda não expirou, agenda a expiração exata
+    if (card.isTemporary && !isExpired) {
+        LaunchedEffect(card.id, card.createdAt) {
+            val elapsed = System.currentTimeMillis() - card.createdAt
+            val remaining = TEMP_CARD_DURATION_MS - elapsed
+            if (remaining > 0) {
+                kotlinx.coroutines.delay(remaining)
+            }
+            isExpired = true
+        }
+    }
+
+    val effectiveIsActive = card.isActive && !isExpired
+
     val cardGradient = Brush.linearGradient(
-        colors = listOf(
-            baseColor,
-            darkVariant,
-            darkVariant,
-            baseColor.copy(alpha = 0.9f)
-        ),
+        colors = if (effectiveIsActive) {
+            listOf(baseColor, darkVariant, darkVariant, baseColor.copy(alpha = 0.9f))
+        } else {
+            // Cinza quando expirado ou inativo
+            listOf(Color(0xFF424242), Color(0xFF212121), Color(0xFF212121), Color(0xFF424242))
+        },
         start = Offset(0f, 0f),
         end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
     )
@@ -78,7 +96,7 @@ fun CardItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(1.586f) // Proporção de cartão real (85.6mm x 53.98mm)
+            .aspectRatio(1.586f)
             .shadow(
                 elevation = 16.dp,
                 shape = shape,
@@ -105,20 +123,38 @@ fun CardItem(
                 )
         )
 
-        // ── Conteúdo do cartão ──
         Box(Modifier.fillMaxSize().padding(20.dp)) {
 
             // ─── Topo: Bandeira (canto superior direito) ───
-            Text(
-                text = card.brand.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color.White.copy(alpha = 0.9f),
-                letterSpacing = 2.sp,
-                modifier = Modifier.align(Alignment.TopEnd)
-            )
+            Row(
+                modifier = Modifier.align(Alignment.TopEnd),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (card.isTemporary) {
+                    Surface(
+                        color = if (isExpired) Color(0xFFB71C1C) else Color(0xFFFFD700),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = if (isExpired) "EXPIRADO" else "24H / TEMP",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Black,
+                            color = if (isExpired) Color.White else Color.Black,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = card.brand.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = if (effectiveIsActive) 0.9f else 0.4f),
+                    letterSpacing = 2.sp
+                )
+            }
 
-            // ─── Logo do banco (canto superior esquerdo, acima do chip) ───
+            // ─── Logo do banco (canto superior esquerdo) ───
             if (card.bankName.isNotBlank()) {
                 BankLogo(
                     bankName = card.bankName,
@@ -127,14 +163,14 @@ fun CardItem(
                 )
             }
 
-            // ─── Chip dourado (esquerda, topo) ───
+            // ─── Chip dourado ───
             ChipElement(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(top = 36.dp)
             )
 
-            // ─── Contactless (direita do chip) ───
+            // ─── Contactless ───
             ContactlessIcon(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -154,14 +190,14 @@ fun CardItem(
                 text = formatCardNumber(card.lastDigits),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = Color.White.copy(alpha = if (effectiveIsActive) 1f else 0.4f),
                 letterSpacing = 1.5.sp,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(top = 12.dp)
             )
 
-            // ─── Validade ───
+            // ─── Validade + Nome ───
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -171,7 +207,7 @@ fun CardItem(
                     text = "VALID THRU",
                     style = MaterialTheme.typography.labelSmall,
                     fontSize = 7.sp,
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = Color.White.copy(alpha = if (effectiveIsActive) 0.5f else 0.2f),
                     fontWeight = FontWeight.Normal
                 )
                 Spacer(Modifier.height(2.dp))
@@ -179,26 +215,58 @@ fun CardItem(
                     text = formatExpiry(card.expiry),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = Color.White.copy(alpha = if (effectiveIsActive) 1f else 0.4f),
                     letterSpacing = 1.sp
                 )
                 Spacer(Modifier.height(8.dp))
-                // ─── Nome do titular ───
                 Text(
                     text = card.name.uppercase(),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = Color.White.copy(alpha = if (effectiveIsActive) 1f else 0.4f),
                     letterSpacing = 0.5.sp
                 )
+            }
+        }
+
+        // ─── Overlay de Expiração ───
+        if (isExpired) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.55f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Surface(
+                        color = Color(0xFFB71C1C),
+                        shape = RoundedCornerShape(8.dp),
+                        shadowElevation = 8.dp
+                    ) {
+                        Text(
+                            text = "CARTÃO CANCELADO",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "O cartão temporário de 24h foi cancelado",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                }
             }
         }
     }
 }
 
-/**
- * Chip dourado do cartão — retângulo arredondado com linhas internas.
- */
+// ── Componentes privados ──
+
 @Composable
 private fun ChipElement(modifier: Modifier = Modifier) {
     Canvas(
@@ -208,7 +276,6 @@ private fun ChipElement(modifier: Modifier = Modifier) {
         val h = size.height
         val cornerRadius = CornerRadius(6f, 6f)
 
-        // Corpo do chip
         drawRoundRect(
             brush = Brush.verticalGradient(
                 colors = listOf(ChipGold, ChipGoldDark, ChipGold)
@@ -217,24 +284,17 @@ private fun ChipElement(modifier: Modifier = Modifier) {
             size = Size(w, h)
         )
 
-        // Linhas internas do chip
         val lineColor = ChipGoldDark.copy(alpha = 0.6f)
         val strokeWidth = 1.5f
 
-        // Linha horizontal central
         drawLine(lineColor, Offset(0f, h / 2), Offset(w, h / 2), strokeWidth)
-        // Linhas horizontais superior e inferior
         drawLine(lineColor, Offset(w * 0.2f, h * 0.3f), Offset(w * 0.8f, h * 0.3f), strokeWidth)
         drawLine(lineColor, Offset(w * 0.2f, h * 0.7f), Offset(w * 0.8f, h * 0.7f), strokeWidth)
-        // Linhas verticais
         drawLine(lineColor, Offset(w * 0.35f, 0f), Offset(w * 0.35f, h), strokeWidth)
         drawLine(lineColor, Offset(w * 0.65f, 0f), Offset(w * 0.65f, h), strokeWidth)
     }
 }
 
-/**
- * Ícone do contactless — arcos concêntricos.
- */
 @Composable
 private fun ContactlessIcon(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier.size(18.dp)) {
@@ -242,7 +302,6 @@ private fun ContactlessIcon(modifier: Modifier = Modifier) {
         val centerY = size.height / 2
         val color = ContactlessWhite
 
-        // Arcos concêntricos (de menor para maior)
         for (i in 1..3) {
             val radius = (size.width * 0.15f) * i
             drawArc(
@@ -258,45 +317,37 @@ private fun ContactlessIcon(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Logo da bandeira do cartão.
- */
 @Composable
 private fun BrandLogo(brand: String, modifier: Modifier = Modifier) {
     when (brand.lowercase()) {
         "mastercard" -> MastercardLogo(modifier)
         "visa" -> VisaLogo(modifier)
         "elo" -> EloLogo(modifier)
-        else -> MastercardLogo(modifier) // fallback
+        else -> MastercardLogo(modifier)
     }
 }
 
 @Composable
 private fun MastercardLogo(modifier: Modifier = Modifier) {
     Box(modifier = modifier.size(width = 44.dp, height = 28.dp)) {
-        // Círculo vermelho (esquerda)
         Box(
             modifier = Modifier
                 .size(28.dp)
                 .align(Alignment.CenterStart)
                 .background(MastercardRed, CircleShape)
         )
-        // Círculo laranja (direita, sobreposto)
         Box(
             modifier = Modifier
                 .size(28.dp)
                 .align(Alignment.CenterEnd)
                 .background(MastercardOrange, CircleShape)
         )
-        // Sobreposição (cor de mistura)
         Canvas(modifier = Modifier.fillMaxSize()) {
             val circleRadius = size.height / 2
             val leftCenter = Offset(circleRadius, size.height / 2)
             val rightCenter = Offset(size.width - circleRadius, size.height / 2)
 
-            // Desenha a interseção
             val path = Path().apply {
-                // Apenas a área de sobreposição como um pequeno retângulo arredondado no meio
                 val overlapLeft = rightCenter.x - circleRadius
                 val overlapRight = leftCenter.x + circleRadius
                 val midX = (overlapLeft + overlapRight) / 2
@@ -355,6 +406,5 @@ private fun formatCardNumber(lastDigits: String): String {
 }
 
 private fun formatExpiry(expiry: String): String {
-    // Formata "12/28" para "1 2 / 2 8" com espaçamento
     return expiry.map { it }.joinToString(" ")
 }
