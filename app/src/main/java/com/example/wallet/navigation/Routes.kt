@@ -14,10 +14,4 @@ sealed class Routes(val route: String) {
     data object Settings : Routes("settings")
     data object Purchases : Routes("purchases")
     data object EditProfile : Routes("edit_profile")
-    data object AddPurchase : Routes("add_purchase")
-
-    data object CardDetails : Routes("card_details/{cardId}") {
-        const val ARG_CARD_ID = "cardId"
-        fun build(cardId: Long) = "card_details/$cardId"
-    }
 }

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.border
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.wallet.ui.components.BottomNavigationBar
@@ -57,7 +59,6 @@ import com.example.wallet.utils.ServiceLocator
 fun MyCardsScreen(
     currentRoute: String?,
     onNavigate: (String) -> Unit,
-    onCardClick: (Long) -> Unit,
     onCreateCard: () -> Unit,
     viewModel: MyCardsViewModel = viewModel(),
     purchasesViewModel: PurchasesViewModel = viewModel(),
@@ -65,7 +66,9 @@ fun MyCardsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val cards = state.data ?: emptyList()
+    val allCards = state.data ?: emptyList()
+    var filterFavorites by remember { mutableStateOf(false) }
+    val cards = if (filterFavorites) allCards.filter { it.isFavorite } else allCards
     var showBankModal by remember { mutableStateOf(false) }
     var showManagementSheet by remember { mutableStateOf(false) }
     var managementCard by remember { mutableStateOf<CardModel?>(null) }
@@ -94,19 +97,22 @@ fun MyCardsScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    if (cards.isNotEmpty()) {
-                        val currentCard = cards.getOrNull(pagerState.currentPage)
-                        IconButton(onClick = {
-                            currentCard?.let { card ->
-                                scope.launch {
-                                    ServiceLocator.cardRepository.setFavorite(card.id, !card.isFavorite)
-                                }
-                            }
-                        }) {
+                    if (allCards.isNotEmpty()) {
+                        IconButton(
+                            onClick = { filterFavorites = !filterFavorites },
+                            modifier = Modifier
+                                .border(
+                                    width = 1.5.dp,
+                                    color = if (filterFavorites) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.outlineVariant,
+                                    shape = CircleShape
+                                )
+                                .size(40.dp)
+                        ) {
                             Icon(
-                                Icons.Default.Star,
-                                contentDescription = "Favoritar",
-                                tint = if (currentCard?.isFavorite == true) MaterialTheme.colorScheme.primary
+                                if (filterFavorites) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = "Filtrar favoritos",
+                                tint = if (filterFavorites) MaterialTheme.colorScheme.primary
                                        else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(22.dp)
                             )
@@ -252,7 +258,7 @@ fun MyCardsScreen(
                                     modifier = Modifier.weight(1f),
                                     pageSpacing = 16.dp
                                 ) { page ->
-                                    CardItem(card = cards[page], onClick = { onCardClick(cards[page].id) })
+                                    CardItem(card = cards[page], onClick = {})
                                 }
                                 IconButton(
                                     onClick = { scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) } },

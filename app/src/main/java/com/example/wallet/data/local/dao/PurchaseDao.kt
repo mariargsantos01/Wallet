@@ -25,6 +25,9 @@ interface PurchaseDao {
     @Query("SELECT COUNT(*) FROM purchases")
     suspend fun count(): Int
 
+    @Query("SELECT COUNT(*) FROM purchases WHERE cardId = :cardId")
+    suspend fun countByCard(cardId: Long): Int
+
     @Query("SELECT COALESCE(SUM(amount), 0.0) FROM purchases WHERE cardId = :cardId")
     suspend fun sumByCard(cardId: Long): Double
 

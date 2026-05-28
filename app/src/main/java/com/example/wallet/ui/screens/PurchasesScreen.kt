@@ -57,7 +57,6 @@ enum class SortMode { DATE, AMOUNT_ASC, AMOUNT_DESC }
 fun PurchasesScreen(
     currentRoute: String?,
     onNavigate: (String) -> Unit,
-    onAddPurchase: () -> Unit = {},
     viewModel: PurchasesViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,17 +82,6 @@ fun PurchasesScreen(
     Scaffold(
         topBar = { TopBar(title = "Compras") },
         bottomBar = { BottomNavigationBar(currentRoute = currentRoute, onNavigate = onNavigate) },
-        floatingActionButton = {
-            if (cards.isNotEmpty()) {
-                FloatingActionButton(
-                    onClick = onAddPurchase,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar compra")
-                }
-            }
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {

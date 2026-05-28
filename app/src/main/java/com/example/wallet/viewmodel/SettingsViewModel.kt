@@ -24,6 +24,7 @@ class SettingsViewModel(
 
     fun logout(onCompleted: () -> Unit) {
         viewModelScope.launch {
+            ServiceLocator.stopPurchaseSimulator()
             userRepository.logout()
             onCompleted()
         }

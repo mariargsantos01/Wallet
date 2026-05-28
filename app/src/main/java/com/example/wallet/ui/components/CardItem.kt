@@ -144,6 +144,19 @@ fun CardItem(
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
+                } else if (!card.isActive) {
+                    Surface(
+                        color = Color(0xFFB71C1C),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = "BLOQUEADO",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
                 Text(
                     text = card.brand.uppercase(),

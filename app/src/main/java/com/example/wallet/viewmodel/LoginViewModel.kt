@@ -59,7 +59,7 @@ class LoginViewModel(
                     // Salva informações do usuário na sessão
                     val displayName = jwt?.fullName?.ifBlank { null }
                         ?: username.value.replaceFirstChar { it.uppercase() }
-                    val userEmail = jwt?.email?.ifBlank { null } ?: username.value
+                    val userEmail = jwt?.email?.ifBlank { null } ?: ""
                     val userName = jwt?.username?.ifBlank { null } ?: username.value
                     sessionManager.setUserInfo(
                         username = userName,
@@ -69,6 +69,8 @@ class LoginViewModel(
 
                     // Tenta inserir compras de exemplo (se ainda não existem)
                     ServiceLocator.trySeedPurchases()
+                    // Inicia simulador de compras automáticas
+                    ServiceLocator.startPurchaseSimulator()
                     val hasCards = cardRepository.hasCards()
                     _uiState.value = UiState(data = LoginResult(hasCards))
                     onSuccess(hasCards)

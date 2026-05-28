@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -60,6 +61,7 @@ fun SettingsScreen(
     onNavigate: (String) -> Unit,
     onLogout: () -> Unit,
     onEditProfile: () -> Unit = {},
+    onResetPassword: () -> Unit = {},
     viewModel: SettingsViewModel = viewModel()
 ) {
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
@@ -169,7 +171,7 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         ThemeChip(
                             label = "Claro",
@@ -203,9 +205,10 @@ fun SettingsScreen(
                         headlineContent = {
                             Text("Segurança", fontWeight = FontWeight.Medium)
                         },
-                        supportingContent = { Text("Senha, biometria") },
+                        supportingContent = { Text("Senha") },
                         leadingContent = { Icon(Icons.Default.Lock, contentDescription = "Segurança") },
-                        colors = itemColors
+                        colors = itemColors,
+                        modifier = Modifier.clickable { onResetPassword() }
                     )
                 }
 
@@ -294,14 +297,15 @@ private fun ThemeChip(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                maxLines = 1
             )
         },
         leadingIcon = {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(14.dp)
             )
         },
         shape = MaterialTheme.shapes.small,

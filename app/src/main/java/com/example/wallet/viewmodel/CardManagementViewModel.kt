@@ -48,13 +48,21 @@ class CardManagementViewModel(
     // --- Sheet ---
 
     fun openManagement(card: CardModel) {
-        // Carregar estado persistido ou usar padrão para cartões novos
-        val savedState = preferencesManager.getCardState(card.id) ?: CardManagementState()
+        // Usa os dados reais do cartão (Room) como fonte da verdade
+        // e complementa com dados visuais do SharedPreferences (showData)
+        val savedState = preferencesManager.getCardState(card.id)
+        val state = CardManagementState(
+            isFavorite = card.isFavorite,
+            isActive = card.isActive,
+            dayLimit = card.dayLimit.toFloat(),
+            nightLimit = card.nightLimit.toFloat(),
+            showData = savedState?.showData ?: false
+        )
         _uiState.update {
             it.copy(
                 isManagementSheetOpen = true,
                 selectedCard = card,
-                managementState = savedState
+                managementState = state
             )
         }
     }
@@ -75,11 +83,25 @@ class CardManagementViewModel(
     }
 
     fun updateManagementState(state: CardManagementState) {
+        val previousState = _uiState.value.managementState
         _uiState.update { it.copy(managementState = state) }
         // Persistir imediatamente a cada mudança
         val currentCard = _uiState.value.selectedCard
         if (currentCard != null) {
             preferencesManager.saveCardState(currentCard.id, state)
+
+            // Atualizar Room quando isActive ou isFavorite mudar
+            viewModelScope.launch {
+                if (state.isActive != previousState.isActive) {
+                    cardRepository.setActive(currentCard.id, state.isActive)
+                }
+                if (state.isFavorite != previousState.isFavorite) {
+                    cardRepository.setFavorite(currentCard.id, state.isFavorite)
+                }
+                if (state.dayLimit != previousState.dayLimit || state.nightLimit != previousState.nightLimit) {
+                    cardRepository.updateLimits(currentCard.id, state.dayLimit.toDouble(), state.nightLimit.toDouble())
+                }
+            }
         }
     }
 

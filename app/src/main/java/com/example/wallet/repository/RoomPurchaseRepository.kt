@@ -63,4 +63,8 @@ class RoomPurchaseRepository(
     override suspend fun getTotalByCard(cardId: Long): Double {
         return purchaseDao.sumByCard(cardId)
     }
+
+    override suspend fun countByCard(cardId: Long): Int {
+        return purchaseDao.countByCard(cardId)
+    }
 }

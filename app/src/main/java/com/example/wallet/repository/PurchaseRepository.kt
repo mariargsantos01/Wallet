@@ -17,4 +17,7 @@ interface PurchaseRepository {
 
     /** Soma total de compras do cartão. */
     suspend fun getTotalByCard(cardId: Long): Double
+
+    /** Quantidade de compras do cartão. */
+    suspend fun countByCard(cardId: Long): Int
 }

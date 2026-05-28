@@ -35,4 +35,8 @@ class FakePurchaseRepository : PurchaseRepository {
     override suspend fun getTotalByCard(cardId: Long): Double {
         return _items.value.sumOf { it.amount }
     }
+
+    override suspend fun countByCard(cardId: Long): Int {
+        return _items.value.size
+    }
 }

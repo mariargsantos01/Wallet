@@ -150,4 +150,18 @@ object ServiceLocator {
     val bankRepository: BankRepository by lazy {
         RoomBankRepository(requireDb().bankAccountDao(), requireDb().bankConnectionDao(), sessionManager)
     }
+
+    val purchaseSimulator: PurchaseSimulator by lazy {
+        PurchaseSimulator(cardRepository, purchaseRepository)
+    }
+
+    /** Inicia o simulador de compras automáticas. */
+    fun startPurchaseSimulator() {
+        purchaseSimulator.start()
+    }
+
+    /** Para o simulador de compras (ex: ao fazer logout). */
+    fun stopPurchaseSimulator() {
+        purchaseSimulator.stop()
+    }
 }

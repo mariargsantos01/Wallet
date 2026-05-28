@@ -55,8 +55,8 @@ class SignUpViewModel(
             _uiState.value = UiState(error = "Informe um email válido")
             return
         }
-        if (_password.value.length < 6) {
-            _uiState.value = UiState(error = "A senha deve ter no mínimo 6 caracteres")
+        if (_password.value.length < 8) {
+            _uiState.value = UiState(error = "A senha deve ter no mínimo 8 caracteres")
             return
         }
         if (_password.value != _confirmPassword.value) {

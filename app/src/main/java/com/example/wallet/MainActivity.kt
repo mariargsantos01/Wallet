@@ -52,7 +52,12 @@ class MainActivity : ComponentActivity() {
                 } else {
                     // Decide a rota inicial baseado na sessão válida
                     val hasValidSession = ServiceLocator.sessionManager.getCurrentUserId() != null
-                    val startRoute = if (hasValidSession) Routes.MyCards.route else Routes.Login.route
+                    val startRoute = if (hasValidSession) {
+                        ServiceLocator.startPurchaseSimulator()
+                        Routes.MyCards.route
+                    } else {
+                        Routes.Login.route
+                    }
                     AppNavHost(startDestination = startRoute)
                 }
             }

@@ -7,12 +7,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.wallet.ui.screens.*
 
 // Ordem das abas do menu inferior para determinar direção do slide
@@ -164,9 +162,6 @@ fun AppNavHost(
             MyCardsScreen(
                 currentRoute = currentRoute,
                 onNavigate = navigateRoot,
-                onCardClick = { cardId ->
-                    navController.navigate(Routes.CardDetails.build(cardId))
-                },
                 onCreateCard = {
                     navController.navigate(Routes.CreateCard.route)
                 }
@@ -223,8 +218,7 @@ fun AppNavHost(
         ) {
             PurchasesScreen(
                 currentRoute = currentRoute,
-                onNavigate = navigateRoot,
-                onAddPurchase = { navController.navigate(Routes.AddPurchase.route) }
+                onNavigate = navigateRoot
             )
         }
 
@@ -286,31 +280,14 @@ fun AppNavHost(
                 },
                 onEditProfile = {
                     navController.navigate(Routes.EditProfile.route)
+                },
+                onResetPassword = {
+                    navController.navigate(Routes.ForgotPassword.route)
                 }
             )
         }
 
-        // ── Detalhes do Cartão ────────────────────────────────
-        composable(
-            route = Routes.CardDetails.route,
-            arguments = listOf(navArgument(Routes.CardDetails.ARG_CARD_ID) {
-                type = NavType.LongType
-            })
-        ) { entry ->
-            val cardId = entry.arguments?.getLong(Routes.CardDetails.ARG_CARD_ID) ?: 0L
-            CardDetailsScreen(
-                cardId = cardId,
-                onBack = { navController.popBackStack() }
-            )
-        }
 
-        // ── Adicionar Compra ──────────────────────────────────
-        composable(Routes.AddPurchase.route) {
-            AddPurchaseScreen(
-                onBack = { navController.popBackStack() },
-                onPurchaseAdded = { navController.popBackStack() }
-            )
-        }
 
         // ── Editar Perfil ─────────────────────────────────────
         composable(Routes.EditProfile.route) {

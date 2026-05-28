@@ -100,7 +100,7 @@ fun SignUpScreen(
             value = password,
             onValueChange = viewModel::onPasswordChange,
             label = "Senha",
-            placeholder = "Mínimo 6 caracteres",
+            placeholder = "Mínimo 8 caracteres",
             leadingIcon = Icons.Default.Lock
         )
         Spacer(Modifier.height(20.dp))
