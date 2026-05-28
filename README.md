@@ -397,6 +397,16 @@ Suporte a 3 modos de tema (persistido em SharedPreferences):
 
 ---
 
+## 👥 Equipe
+
+- Maria Rita Guedes
+- Diego Souza
+- Oswaldo Schermach
+- Mateus Guerra
+- Alan Deigo
+
+---
+
 ## 📄 Licença
 
 Projeto acadêmico / uso pessoal.
