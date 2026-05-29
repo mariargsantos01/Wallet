@@ -403,7 +403,7 @@ Suporte a 3 modos de tema (persistido em SharedPreferences):
 - Diego Souza
 - Oswaldo Schermach
 - Mateus Guerra
-- Alan Deigo
+- Alan Diego
 
 ---
 
